@@ -1,0 +1,31 @@
+{
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "bcryptjs": "^3.0.2",
+    "cloudinary": "^2.7.0",
+    "cors": "^2.8.5",
+    "dayjs": "^1.11.18",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "jwt-decode": "^4.0.0",
+    "mongoose": "^8.18.3",
+    "multer": "^2.0.2",
+    "nodemailer": "^7.0.6",
+    "nodemon": "^3.1.10"
+  },
+  "name": "jobportal",
+  "version": "1.0.0",
+  "description": "job portal to hire people and post jobs",
+  "main": "backend/server.js",
+  "type": "module",
+  "devDependencies": {},
+"scripts": {
+  "dev": "nodemon backend/server.js",
+  "start": "node backend/server.js",
+  "seed:admin": "node backend/scripts/createAdmin.script.js",
+  "test": "echo \"Error: no test specified\" && exit 1"
+},
+  "author": "nikhil-gb",
+  "license": "ISC"
+}
