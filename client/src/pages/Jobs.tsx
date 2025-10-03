@@ -1,26 +1,22 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import API from "../api/api";
+import ApplyModal from "../components/ApplyModal";
 
 const Jobs = () => {
   const [jobs, setJobs] = useState<any[]>([]);
+  const [showModal, setShowModal] = useState(false);
+  const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
+
   const [search, setSearch] = useState("");
 
-  const fetchJobs = async () => {
-    const { data } = await API.get("/jobs");
-    setJobs(data);
-  };
-
   useEffect(() => {
-    fetchJobs();
+    API.get("/jobs").then((res) => setJobs(res.data));
   }, []);
 
-  const handleApply = async (jobId: string) => {
-    try {
-      await API.post(`/jobs/${jobId}/apply`, { resumeUrl: "https://myresume.pdf", coverLetter: "Excited to apply!" });
-      alert("Applied successfully!");
-    } catch (err: any) {
-      alert(err.response?.data?.message || "Failed to apply");
-    }
+  const handleApply = (jobId: string) => {
+    setSelectedJobId(jobId);
+    setShowModal(true);
   };
 
   const filtered = jobs.filter((j) =>
@@ -55,6 +51,10 @@ const Jobs = () => {
           </button>
         </div>
       ))}
+
+      {showModal && selectedJobId && (
+        <ApplyModal jobId={selectedJobId} onClose={() => setShowModal(false)} />
+      )}
     </div>
   );
 };

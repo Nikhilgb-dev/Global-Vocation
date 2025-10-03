@@ -7,10 +7,11 @@ import {
   deleteCommunity,
 } from "../controllers/community.controller.js";
 import { protect } from "../middlewares/auth.middleware.js";
+import { upload } from "../utils/cloudinary.util.js";
 
 const router = express.Router();
 
-router.post("/", protect, createCommunity);
+router.post("/", protect, upload.single("coverImage"), createCommunity);
 router.get("/", getCommunities);
 router.get("/:id", getCommunityById);
 router.put("/:id", protect, updateCommunity);

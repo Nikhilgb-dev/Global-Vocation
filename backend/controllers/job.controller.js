@@ -1,10 +1,14 @@
 import Job from "../models/job.model.js";
 import Application from "../models/application.model.js";
+import { uploadToCloudinary } from "../utils/cloudinary.util.js";
 
 export const applyJob = async (req, res) => {
   try {
     const jobId = req.params.id;
-    const { resumeUrl, coverLetter } = req.body;
+    const { coverLetter, yearsOfExperience } = req.body;
+
+    // Upload resume to Cloudinary
+    const resumeUrl = await uploadToCloudinary(req.file);
 
     // check if job exists
     const job = await Job.findById(jobId);
@@ -23,8 +27,9 @@ export const applyJob = async (req, res) => {
     const application = await Application.create({
       job: jobId,
       user: req.user._id,
-      resumeUrl,
+      resume: resumeUrl,
       coverLetter,
+      yearsOfExperience,
       status: "applied",
     });
 

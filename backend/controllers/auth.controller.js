@@ -1,11 +1,12 @@
 import User from "../models/user.model.js";
 import bcrypt from "bcryptjs";
 import generateToken from "../utils/generateToken.util.js";
+import { uploadToCloudinary } from "../utils/cloudinary.util.js";
 
 // ========== USER REGISTRATION ==========
 export const register = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, headline, description, location, website, skills, socialLinks } = req.body;
 
     // Check if user already exists
     const existingUser = await User.findOne({ email });
@@ -16,12 +17,25 @@ export const register = async (req, res) => {
     // Hash password
     const hashed = await bcrypt.hash(password, 10);
 
+    // Handle profile photo upload
+    let profilePhotoUrl = "";
+    if (req.file) {
+      profilePhotoUrl = await uploadToCloudinary(req.file.path);
+    }
+
     // Create new user
     const user = await User.create({
       name,
       email,
       password: hashed,
       role: "user", // self-signup always defaults to normal user
+      profilePhoto: profilePhotoUrl,
+      headline,
+      description,
+      location,
+      website,
+      skills,
+      socialLinks,
     });
 
     // Return user info + JWT

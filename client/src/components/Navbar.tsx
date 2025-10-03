@@ -13,12 +13,22 @@ export default function Navbar() {
 
   // Fetch logged-in user
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      API.get("/users/me")
-        .then((res) => setUser(res.data))
-        .catch(() => setUser(null));
-    }
+    const fetchUser = () => {
+      const token = localStorage.getItem("token");
+      if (token) {
+        API.get("/users/me")
+          .then((res) => setUser(res.data))
+          .catch(() => setUser(null));
+      }
+    };
+
+    fetchUser(); // Initial fetch
+
+    window.addEventListener("auth-change", fetchUser); // Refetch on auth change
+
+    return () => {
+      window.removeEventListener("auth-change", fetchUser); // Cleanup
+    };
   }, []);
 
   const handleLogout = () => {
@@ -51,19 +61,8 @@ export default function Navbar() {
               Pricing
             </NavLink>
 
-            {/* Only admin can see these */}
-            {user?.role === "admin" && (
-              <>
-                <NavLink to="/post-job" className={linkClass}>
-                  Post a Job
-                </NavLink>
-                <NavLink to="/communities" className={linkClass}>
-                  Communities
-                </NavLink>
-              </>
-            )}
-
-            {user?.role === "admin" && (
+            {/* Only admin and employer can see this */}
+            {(user?.role === "admin" || user?.role === "employer") && (
               <NavLink to="/post-job" className={linkClass}>
                 Post a Job
               </NavLink>

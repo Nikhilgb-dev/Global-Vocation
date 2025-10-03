@@ -1,8 +1,25 @@
-import React, { useState } from "react";
+import { toast } from "react-hot-toast";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import API from "../api/api";
 
 const PostJob = () => {
   const [form, setForm] = useState({ title: "", description: "", location: "", salary: "", employmentType: "Full-time" });
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const checkUser = async () => {
+      try {
+        const { data: user } = await API.get("/users/me");
+        if (user.role !== "admin" && user.role !== "employer") {
+          navigate("/");
+        }
+      } catch (error) {
+        navigate("/");
+      }
+    };
+    checkUser();
+  }, [navigate]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -11,9 +28,9 @@ const PostJob = () => {
     e.preventDefault();
     try {
       await API.post("/jobs", form);
-      alert("Job posted successfully!");
+      toast.success("Job posted successfully!");
     } catch (err: any) {
-      alert(err.response?.data?.message || "Failed to post job");
+      toast.error(err.response?.data?.message || "Failed to post job");
     }
   };
 

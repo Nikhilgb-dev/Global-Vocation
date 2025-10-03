@@ -1,11 +1,18 @@
 import Community from "../models/community.model.js";
+import { uploadToCloudinary } from "../utils/cloudinary.util.js";
 
 // CREATE
 export const createCommunity = async (req, res) => {
   try {
+    let coverImage = "";
+    if (req.file) {
+      coverImage = await uploadToCloudinary(req.file, "community_covers");
+    }
+
     const community = await Community.create({
       ...req.body,
       createdBy: req.user._id,
+      coverImage,
     });
     res.status(201).json(community);
   } catch (err) {

@@ -11,11 +11,13 @@ import {
 
 import { protect } from "../middlewares/auth.middleware.js";
 
+import { upload } from "../utils/cloudinary.util.js";
+
 const router = express.Router();
 
 router.post("/", protect, createJob);
 
-router.post("/:id/apply", protect, applyJob);
+router.post("/:id/apply", protect, upload.single("resume"), applyJob);
 router.get("/", getJobs);
 router.get("/:id", getJobById);
 router.get("/categories", getJobCategories);

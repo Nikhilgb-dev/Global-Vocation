@@ -1,3 +1,5 @@
+import { jwtDecode } from "jwt-decode";
+import { toast } from "react-hot-toast";
 import React, { useState } from "react";
 import API from "../api/api";
 import { useNavigate } from "react-router-dom";
@@ -14,9 +16,15 @@ const Login = () => {
     try {
       const { data } = await API.post("/auth/login", form);
       localStorage.setItem("token", data.token);
-      navigate("/dashboard");
+      window.dispatchEvent(new Event("auth-change"));
+      const decoded: any = jwtDecode(data.token);
+      if (decoded.role === "admin") {
+        navigate("/dashboard");
+      } else {
+        navigate("/");
+      }
     } catch (err: any) {
-      alert(err.response?.data?.message || "Login failed");
+      toast.error(err.response?.data?.message || "Login failed");
     }
   };
 

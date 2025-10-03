@@ -1,3 +1,4 @@
+import { toast } from "react-hot-toast";
 import React, { useEffect, useState } from "react";
 import API from "../api/api";
 
@@ -23,7 +24,7 @@ const Feed = () => {
             setNewPost("");
             fetchPosts();
         } catch (err: any) {
-            alert(err.response?.data?.message || "Failed to create post");
+            toast.error(err.response?.data?.message || "Failed to create post");
         }
     };
 
