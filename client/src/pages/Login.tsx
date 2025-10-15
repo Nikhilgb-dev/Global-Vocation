@@ -29,7 +29,7 @@ const Login = () => {
       } else if (decoded.role === "admin") {
         navigate("/dashboard");
       } else {
-        navigate("/");
+        navigate("/user/dashboard");
       }
 
     } catch (err: any) {

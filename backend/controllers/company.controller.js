@@ -3,6 +3,7 @@ import User from "../models/user.model.js";
 import { uploadToCloudinary } from "../utils/cloudinary.util.js";
 import bcrypt from "bcryptjs";
 import Application from "../models/application.model.js";
+import Notification from "../models/notification.model.js";
 import Job from "../models/job.model.js";
 import generateToken from "../utils/generateToken.util.js";
 
@@ -377,22 +378,50 @@ export const createEmployeeForCompany = async (req, res) => {
 export const updateCompanyApplicationStatus = async (req, res) => {
   try {
     const { status, notes } = req.body;
+
     const application = await Application.findById(req.params.id).populate(
       "job"
     );
     if (!application)
       return res.status(404).json({ message: "Application not found" });
 
+    // Check company ownership
     if (application.job.company.toString() !== req.user.company.toString()) {
       return res.status(403).json({ message: "Not authorized" });
     }
 
+    // Update status
     application.status = status;
     if (notes) application.metadata.notes = notes;
     await application.save();
 
-    res.json({ message: "Status updated", application });
+    // ✅ Create Notification
+    const jobData = await Job.findById(application.job._id).populate(
+      "company",
+      "name"
+    );
+    if (!jobData)
+      console.warn("⚠️ Job not found for application:", application._id);
+
+    // Only create if status is meaningful
+    if (
+      ["reviewed", "interview", "offer", "hired", "rejected"].includes(status)
+    ) {
+      await Notification.create({
+        user: application.user,
+        job: application.job._id,
+        company: jobData.company._id,
+        message: `Your application for "${jobData.title}" at ${jobData.company.name} was marked as ${status}.`,
+      });
+      console.log(
+        "✅ Notification created for user:",
+        application.user.toString()
+      );
+    }
+
+    res.json({ message: "Application status updated", application });
   } catch (err) {
+    console.error("❌ Error updating company application status:", err);
     res.status(500).json({ message: err.message });
   }
 };

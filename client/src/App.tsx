@@ -31,6 +31,7 @@ import CompanyEmployeesPage from "./pages/CompanyEmployeesPage";
 import CompanyApplicantsPage from "./pages/CompanyApplicantsPage";
 import CreateCompanyModal from "./components/CreateCompanyModal";
 import CompanyRegister from "./pages/CompanyRegister";
+import UserDashboard from "./pages/UserDashboard";
 
 export default function App() {
   return (
@@ -60,6 +61,8 @@ export default function App() {
                 path="/dashboard/applications"
                 element={<AdminApplications />}
               />
+
+              <Route path="/user/dashboard" element={<UserDashboard />} />
 
               {/* 🏢 Company Portal Routes */}
               <Route path="/company/login" element={<CompanyLoginPage />} />

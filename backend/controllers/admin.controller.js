@@ -2,6 +2,7 @@ import User from "../models/user.model.js";
 import Application from "../models/application.model.js";
 import Job from "../models/job.model.js";
 import Community from "../models/community.model.js";
+import Notification from "../models/notification.model.js";
 import Post from "../models/post.model.js";
 import bcrypt from "bcryptjs";
 
@@ -127,6 +128,21 @@ export const updateApplicationStatus = async (req, res) => {
       ].includes(status)
     ) {
       return res.status(400).json({ message: "Invalid status" });
+    }
+
+    if (
+      ["reviewed", "interview", "offer", "hired", "rejected"].includes(status)
+    ) {
+      const jobData = await Job.findById(application.job).populate(
+        "company",
+        "name"
+      );
+      await Notification.create({
+        user: application.user,
+        job: application.job,
+        company: jobData.company._id,
+        message: `Your application for "${jobData.title}" at ${jobData.company.name} was ${status}.`,
+      });
     }
 
     application.status = status;
