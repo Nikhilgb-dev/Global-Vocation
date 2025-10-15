@@ -16,6 +16,8 @@ import {
   deleteCompany,
   createCompanyByAdmin,
   registerCompany,
+  createEmployeeForCompany,
+  updateCompanyApplicationStatus,
 } from "../controllers/company.controller.js";
 import { companyLogin } from "../controllers/companyAuth.controller.js";
 import {
@@ -49,6 +51,21 @@ router.delete("/me/jobs/:id", protect, companyAdminOnly, deleteMyJob);
 router.get("/me/employees", protect, companyAdminOnly, getMyEmployees);
 router.put("/me/employees/:id/fire", protect, companyAdminOnly, fireEmployee);
 router.get("/me/applicants", protect, companyAdminOnly, getCompanyApplicants);
+
+router.post(
+  "/me/employees",
+  protect,
+  companyAdminOnly,
+  upload.single("profilePhoto"),
+  createEmployeeForCompany
+);
+
+router.put(
+  "/me/applicants/:id/status",
+  protect,
+  companyAdminOnly,
+  updateCompanyApplicationStatus
+);
 
 // ---- Admin Routes ----
 // router.post("/admin/create", protect, adminOnly, createCompanyByAdmin);

@@ -307,10 +307,96 @@ export const getMyJobs = async (req, res) => {
   }
 };
 
-/**
- * POST /api/companies/me/jobs
- * Create a job owned by this company (company isolation)
- */
+export const createEmployeeForCompany = async (req, res) => {
+  try {
+    const companyId = req.user.company;
+    if (!companyId)
+      return res
+        .status(400)
+        .json({ message: "No company linked to this account" });
+
+    const {
+      name,
+      email,
+      password,
+      role,
+      position,
+      department,
+      phone,
+      joinDate,
+    } = req.body;
+
+    if (!name || !email || !password)
+      return res
+        .status(400)
+        .json({ message: "Name, email, and password are required" });
+
+    // Check for duplicates
+    const existing = await User.findOne({ email });
+    if (existing)
+      return res.status(400).json({ message: "Email already exists" });
+
+    // Handle optional photo upload
+    let profilePhoto = "";
+    if (req.file) {
+      profilePhoto = await uploadToCloudinary(req.file, "employee_profiles");
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const employee = await User.create({
+      name,
+      email,
+      password: hashedPassword,
+      role: role || "employee",
+      company: companyId,
+      position,
+      department,
+      phone,
+      joinDate: joinDate || new Date(),
+      profilePhoto,
+    });
+
+    res.status(201).json({
+      message: "Employee created successfully",
+      employee: {
+        _id: employee._id,
+        name: employee.name,
+        email: employee.email,
+        role: employee.role,
+        company: employee.company,
+        token: generateToken(employee._id, employee.role),
+      },
+    });
+  } catch (err) {
+    console.error("Error in createEmployeeForCompany:", err);
+    res.status(400).json({ message: err.message });
+  }
+};
+
+export const updateCompanyApplicationStatus = async (req, res) => {
+  try {
+    const { status, notes } = req.body;
+    const application = await Application.findById(req.params.id).populate(
+      "job"
+    );
+    if (!application)
+      return res.status(404).json({ message: "Application not found" });
+
+    if (application.job.company.toString() !== req.user.company.toString()) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    application.status = status;
+    if (notes) application.metadata.notes = notes;
+    await application.save();
+
+    res.json({ message: "Status updated", application });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 export const createJobForCompany = async (req, res) => {
   try {
     if (!req.user.company)
@@ -329,10 +415,6 @@ export const createJobForCompany = async (req, res) => {
   }
 };
 
-/**
- * GET /api/companies/me/employees
- * List users who belong to this company (company can manage employees)
- */
 export const getMyEmployees = async (req, res) => {
   try {
     const companyId = req.user.company;
@@ -345,10 +427,6 @@ export const getMyEmployees = async (req, res) => {
   }
 };
 
-/**
- * PUT /api/companies/me/employees/:id/fire
- * Fire (remove company association) an employee or update their role/status
- */
 export const fireEmployee = async (req, res) => {
   try {
     const companyId = req.user.company;
@@ -379,10 +457,6 @@ export const fireEmployee = async (req, res) => {
   }
 };
 
-/**
- * GET /api/companies/me/applicants
- * List applications for all jobs belonging to this company (paginated)
- */
 export const getCompanyApplicants = async (req, res) => {
   try {
     const companyId = req.user.company;
@@ -409,10 +483,6 @@ export const getCompanyApplicants = async (req, res) => {
   }
 };
 
-/**
- * GET /api/companies/me/dashboard
- * Summary stats for the company's dashboard
- */
 export const getCompanyDashboard = async (req, res) => {
   try {
     const companyId = req.user.company;

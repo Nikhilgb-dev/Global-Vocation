@@ -1,7 +1,8 @@
-// src/pages/CompanyDashboard.tsx
 import React, { useEffect, useState } from "react";
 import API from "@/api/api";
 import { useCompany } from "../contexts/CompanyContext";
+import ApplicationStatusDropdown from "@/components/ApplicationStatusDropdown";
+import ViewResumeModal from "@/components/ViewResumeModal";
 
 type DashboardData = {
     employeesCount: number;
@@ -9,8 +10,6 @@ type DashboardData = {
     openJobs: number;
     totalApplicants: number;
     totalHired: number;
-    recentJobs?: any[];
-    recentApplications?: any[];
 };
 
 const StatCard: React.FC<{ title: string; value: number }> = ({ title, value }) => (
@@ -23,14 +22,25 @@ const StatCard: React.FC<{ title: string; value: number }> = ({ title, value }) 
 const CompanyDashboard: React.FC = () => {
     const { company } = useCompany();
     const [data, setData] = useState<DashboardData | null>(null);
+    const [applicants, setApplicants] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [resumeUrl, setResumeUrl] = useState<string | null>(null);
+
+    const fetchDashboard = async () => {
+        const res = await API.get("/companies/me/dashboard");
+        setData(res.data);
+    };
+
+    const fetchApplicants = async () => {
+        const res = await API.get("/companies/me/applicants");
+        setApplicants(res.data.applications || []);
+    };
 
     useEffect(() => {
         const load = async () => {
             setLoading(true);
             try {
-                const res = await API.get("/companies/me/dashboard");
-                setData(res.data);
+                await Promise.all([fetchDashboard(), fetchApplicants()]);
             } catch (err) {
                 console.error(err);
             } finally {
@@ -45,6 +55,7 @@ const CompanyDashboard: React.FC = () => {
 
     return (
         <div className="space-y-6">
+            {/* ====== STAT CARDS ====== */}
             <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-4">
                 <StatCard title="Employees" value={data.employeesCount} />
                 <StatCard title="Jobs Posted" value={data.totalJobs} />
@@ -53,39 +64,72 @@ const CompanyDashboard: React.FC = () => {
                 <StatCard title="Total Hired" value={data.totalHired} />
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <div className="bg-white border rounded p-4 shadow-sm">
-                    <h3 className="font-semibold mb-3">Recent Jobs</h3>
-                    {data.recentJobs && data.recentJobs.length ? (
-                        <ul className="space-y-2">
-                            {data.recentJobs.map((r) => (
-                                <li key={r._id} className="text-sm text-gray-700">
-                                    <div className="font-medium">{r.title}</div>
-                                    <div className="text-xs text-gray-500">Posted {new Date(r.createdAt).toLocaleDateString()}</div>
-                                </li>
-                            ))}
-                        </ul>
-                    ) : (
-                        <div className="text-sm text-gray-500">No recent jobs</div>
-                    )}
-                </div>
+            {/* ====== APPLICANTS TABLE ====== */}
+            <div className="bg-white border rounded-lg shadow-sm p-6">
+                <h2 className="text-lg font-semibold mb-4">Recent Applicants</h2>
 
-                <div className="bg-white border rounded p-4 shadow-sm">
-                    <h3 className="font-semibold mb-3">Recent Applicants</h3>
-                    {data.recentApplications && data.recentApplications.length ? (
-                        <ul className="space-y-2">
-                            {data.recentApplications.map((a) => (
-                                <li key={a._id} className="text-sm text-gray-700">
-                                    <div className="font-medium">{a.user?.name}</div>
-                                    <div className="text-xs text-gray-500">{a.job?.title} • {new Date(a.createdAt).toLocaleDateString()}</div>
-                                </li>
-                            ))}
-                        </ul>
-                    ) : (
-                        <div className="text-sm text-gray-500">No recent applicants</div>
-                    )}
-                </div>
+                {applicants.length === 0 ? (
+                    <div className="text-gray-500">No applicants yet.</div>
+                ) : (
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm border-t">
+                            <thead className="bg-gray-50 text-gray-600 border-b">
+                                <tr>
+                                    <th className="p-2 text-left">Candidate</th>
+                                    <th className="p-2 text-left">Job Title</th>
+                                    <th className="p-2 text-left">Status</th>
+                                    <th className="p-2 text-left">Applied On</th>
+                                    <th className="p-2 text-left">Resume</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {applicants.map((a) => (
+                                    <tr key={a._id} className="border-b hover:bg-gray-50">
+                                        <td className="p-2 flex items-center gap-3">
+                                            {a.user?.profilePhoto ? (
+                                                <img
+                                                    src={a.user.profilePhoto}
+                                                    alt={a.user.name}
+                                                    className="w-9 h-9 rounded-full object-cover ring-1 ring-gray-200"
+                                                />
+                                            ) : (
+                                                <div className="w-9 h-9 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-semibold">
+                                                    {a.user?.name?.charAt(0)}
+                                                </div>
+                                            )}
+                                            <div>
+                                                <div className="font-medium text-gray-900">{a.user?.name}</div>
+                                                <div className="text-xs text-gray-500">{a.user?.email}</div>
+                                            </div>
+                                        </td>
+                                        <td className="p-2">{a.job?.title}</td>
+                                        <td className="p-2">
+                                            <ApplicationStatusDropdown
+                                                id={a._id}
+                                                currentStatus={a.status}
+                                                onUpdated={fetchApplicants}
+                                            />
+                                        </td>
+                                        <td className="p-2 text-gray-500">
+                                            {new Date(a.createdAt).toLocaleDateString()}
+                                        </td>
+                                        <td
+                                            className="p-2 text-blue-600 hover:underline cursor-pointer"
+                                            onClick={() => setResumeUrl(a.resume)}
+                                        >
+                                            View Resume
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
             </div>
+
+            {resumeUrl && (
+                <ViewResumeModal resumeUrl={resumeUrl} onClose={() => setResumeUrl(null)} />
+            )}
         </div>
     );
 };

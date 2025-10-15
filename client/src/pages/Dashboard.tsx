@@ -20,11 +20,15 @@ import {
   Shield,
   ArrowRight
 } from "lucide-react";
+import ApplicationStatusDropdown from "@/components/ApplicationStatusDropdown";
+import ViewResumeModal from "@/components/ViewResumeModal";
 
 const Dashboard = () => {
   const [user, setUser] = useState<any>(null);
   const [jobs, setJobs] = useState<any[]>([]);
   const [communities, setCommunities] = useState<any[]>([]);
+  const [applications, setApplications] = useState<any[]>([]);
+  const [resumeUrl, setResumeUrl] = useState<string | null>(null);
   const [companies, setCompanies] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [posts, setPosts] = useState<any[]>([]);
@@ -46,12 +50,23 @@ const Dashboard = () => {
   const fetchUsers = () => API.get("/admin/users").then((res) => setUsers(res.data));
   const fetchCompanies = () => API.get("/companies").then((res) => setCompanies(res.data));
 
+  const fetchApplications = async () => {
+    try {
+      const res = await API.get("/admin/applications");
+      setApplications(res.data.applications);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+
   useEffect(() => {
     if (user?.role === "admin") {
       API.get("/jobs").then((res) => setJobs(res.data));
       API.get("/communities").then((res) => setCommunities(res.data));
       fetchUsers();
       fetchCompanies();
+      fetchApplications();
     } else if (user?.role === "user") {
       API.get("/posts").then((res) => setPosts(res.data));
     }
@@ -441,6 +456,208 @@ const Dashboard = () => {
                                 <Trash2 className="w-4 h-4" />
                               </motion.button>
                             </div>
+                          </td>
+                        </motion.tr>
+                      ))}
+                    </AnimatePresence>
+                  </tbody>
+                </table>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+              className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mt-8"
+            >
+              <div className="px-6 py-5 border-b border-gray-100 flex items-center gap-3">
+                <div className="bg-emerald-50 p-2.5 rounded-lg">
+                  <CheckCircle className="w-5 h-5 text-emerald-600" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900">Recent Applications</h2>
+                  <p className="text-sm text-gray-500 mt-0.5">
+                    View all job applications across the platform
+                  </p>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50 border-b border-gray-100">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Candidate</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Job Title</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Company</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Resume</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Applied On</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    <AnimatePresence>
+                      {applications.map((a, index) => (
+                        <motion.tr
+                          key={a._id}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ delay: index * 0.03 }}
+                          className="hover:bg-blue-50/30 transition-colors"
+                        >
+                          <td className="px-6 py-4 flex items-center gap-3 whitespace-nowrap">
+                            {a.user?.profilePhoto ? (
+                              <img
+                                src={a.user.profilePhoto}
+                                alt={a.user.name}
+                                className="w-9 h-9 rounded-full object-cover ring-1 ring-gray-200"
+                              />
+                            ) : (
+                              <div className="w-9 h-9 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-medium">
+                                {a.user?.name?.charAt(0)}
+                              </div>
+                            )}
+                            <div>
+                              <div className="font-medium text-gray-900">{a.user?.name}</div>
+                              <div className="text-xs text-gray-500">{a.user?.email}</div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-700 whitespace-nowrap">
+                            {a.job?.title || "-"}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-700 whitespace-nowrap flex items-center gap-2">
+                            {a.job?.company?.logo && (
+                              <img
+                                src={a.job.company.logo}
+                                alt={a.job.company.name}
+                                className="w-6 h-6 rounded-full ring-1 ring-gray-200"
+                              />
+                            )}
+                            {a.job?.company?.name || "-"}
+                          </td>
+                          <td className="px-6 py-4 text-sm whitespace-nowrap">
+                            <td className="px-6 py-4 text-sm whitespace-nowrap">
+                              <ApplicationStatusDropdown
+                                id={a._id}
+                                currentStatus={a.status}
+                                isAdmin
+                                onUpdated={fetchApplications}
+                              />
+                            </td>
+
+                          </td>
+                          <td className="px-6 py-4 text-sm text-blue-600 underline cursor-pointer"
+                            onClick={() => setResumeUrl(a.resume)}>
+                            View Resume
+                          </td>
+
+                          <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
+                            {new Date(a.createdAt).toLocaleDateString()}
+                          </td>
+                          {resumeUrl && (
+                            <ViewResumeModal resumeUrl={resumeUrl} onClose={() => setResumeUrl(null)} />
+                          )}
+
+                        </motion.tr>
+                      ))}
+                    </AnimatePresence>
+                  </tbody>
+                </table>
+
+                {applications.length === 0 && (
+                  <div className="text-center py-6 text-gray-500 text-sm">
+                    No applications found.
+                  </div>
+                )}
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mt-8"
+            >
+              <div className="px-6 py-5 border-b border-gray-100">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-sky-50 p-2.5 rounded-lg">
+                      <Users className="w-5 h-5 text-sky-600" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-bold text-gray-900">Manage Users</h2>
+                      <p className="text-sm text-gray-500 mt-0.5">
+                        View and manage all registered users
+                      </p>
+                    </div>
+                  </div>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setShowCreateCandidateModal(true)}
+                    className="flex items-center justify-center gap-2 px-5 py-2.5 bg-sky-600 text-white rounded-lg font-medium hover:bg-sky-700 transition-colors shadow-sm"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add User
+                  </motion.button>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50 border-b border-gray-100">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Name
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Email
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Role
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Joined
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    <AnimatePresence>
+                      {users.map((u, index) => (
+                        <motion.tr
+                          key={u._id}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ delay: index * 0.03 }}
+                          className="hover:bg-blue-50/30 transition-colors"
+                        >
+                          <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">
+                            {u.name}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                            {u.email}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm capitalize text-gray-600">
+                            {u.role}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {new Date(u.createdAt).toLocaleDateString()}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-right">
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => handleDeleteUser(u._id)}
+                              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                              title="Delete"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </motion.button>
                           </td>
                         </motion.tr>
                       ))}

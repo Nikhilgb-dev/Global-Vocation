@@ -1,4 +1,5 @@
 import User from "../models/user.model.js";
+import Application from "../models/application.model.js";
 import Job from "../models/job.model.js";
 import Community from "../models/community.model.js";
 import Post from "../models/post.model.js";
@@ -77,6 +78,62 @@ export const getAllJobs = async (req, res) => {
   try {
     const jobs = await Job.find().populate("postedBy", "name email");
     res.json(jobs);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const getAllApplications = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page || "1");
+    const limit = parseInt(req.query.limit || "20");
+    const skip = (page - 1) * limit;
+
+    const total = await Application.countDocuments();
+
+    const applications = await Application.find()
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate("user", "name email profilePhoto headline location")
+      .populate("job", "title location company")
+      .populate({
+        path: "job",
+        populate: { path: "company", select: "name logo" },
+      });
+
+    res.json({ total, page, limit, applications });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const updateApplicationStatus = async (req, res) => {
+  try {
+    const { status, notes } = req.body;
+    const application = await Application.findById(req.params.id);
+
+    if (!application)
+      return res.status(404).json({ message: "Application not found" });
+
+    if (
+      ![
+        "applied",
+        "reviewed",
+        "interview",
+        "offer",
+        "hired",
+        "rejected",
+      ].includes(status)
+    ) {
+      return res.status(400).json({ message: "Invalid status" });
+    }
+
+    application.status = status;
+    if (notes) application.metadata.notes = notes;
+    await application.save();
+
+    res.json({ message: "Application status updated", application });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

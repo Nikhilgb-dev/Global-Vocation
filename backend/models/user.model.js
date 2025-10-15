@@ -27,15 +27,21 @@ const userSchema = new mongoose.Schema(
     name: { type: String, required: true },
     email: { type: String, unique: true, required: true },
     password: String,
+
     role: {
       type: String,
-      enum: ["user", "company_admin", "admin", "employer"],
+      enum: ["user", "company_admin", "admin", "employee"],
       default: "user",
     },
 
     profilePhoto: { type: String, default: "" },
     headline: { type: String, default: "" },
     description: { type: String, default: "" },
+    department: { type: String },
+    position: { type: String },
+    phone: { type: String },
+    joinDate: { type: Date },
+
     skills: [String],
 
     experience: [experienceSchema],
@@ -56,5 +62,4 @@ const userSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
-
 export default mongoose.model("User", userSchema);
