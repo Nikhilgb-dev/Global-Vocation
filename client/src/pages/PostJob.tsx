@@ -14,6 +14,9 @@ const PostJob = () => {
         if (user.role !== "admin" && user.role !== "employer") {
           navigate("/");
         }
+        // if (user.role.includes("admin") && user.role !== "employer") {
+        //   navigate("/");
+        // }
       } catch (error) {
         navigate("/");
       }
@@ -21,7 +24,9 @@ const PostJob = () => {
     checkUser();
   }, [navigate]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e: React.FormEvent) => {

@@ -4,250 +4,491 @@ import { Link } from "react-router-dom";
 import CreateCandidateModal from "../components/CreateCandidateModal";
 import EditJobModal from "../components/EditJobModal";
 import EditCommunityModal from "../components/EditCommunityModal";
+import CreateCompanyModal from "../components/CreateCompanyModal";
+import CompanyDetailsModal from "../components/CompanyDetailsModal";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Briefcase,
+  Building2,
+  Users,
+  UsersRound,
+  Plus,
+  Edit2,
+  Trash2,
+  CheckCircle,
+  XCircle,
+  Shield,
+  ArrowRight
+} from "lucide-react";
 
 const Dashboard = () => {
   const [user, setUser] = useState<any>(null);
   const [jobs, setJobs] = useState<any[]>([]);
   const [communities, setCommunities] = useState<any[]>([]);
+  const [companies, setCompanies] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
   const [posts, setPosts] = useState<any[]>([]);
   const [showCreateCandidateModal, setShowCreateCandidateModal] = useState(false);
   const [showEditJobModal, setShowEditJobModal] = useState(false);
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [showEditCommunityModal, setShowEditCommunityModal] = useState(false);
   const [selectedCommunityId, setSelectedCommunityId] = useState<string | null>(null);
-  const [users, setUsers] = useState<any[]>([]);
+  const [showCreateCompanyModal, setShowCreateCompanyModal] = useState(false);
+  const [selectedCompany, setSelectedCompany] = useState<any | null>(null);
 
+  // ===== Fetch Logged-in User =====
   useEffect(() => {
-    API.get("/users/me").then((res) => setUser(res.data)).catch(() => setUser(null));
+    API.get("/users/me")
+      .then((res) => setUser(res.data))
+      .catch(() => setUser(null));
   }, []);
 
-  const fetchUsers = () => {
-    API.get("/admin/users").then((res) => setUsers(res.data));
-  }
+  const fetchUsers = () => API.get("/admin/users").then((res) => setUsers(res.data));
+  const fetchCompanies = () => API.get("/companies").then((res) => setCompanies(res.data));
 
   useEffect(() => {
     if (user?.role === "admin") {
       API.get("/jobs").then((res) => setJobs(res.data));
       API.get("/communities").then((res) => setCommunities(res.data));
       fetchUsers();
+      fetchCompanies();
     } else if (user?.role === "user") {
       API.get("/posts").then((res) => setPosts(res.data));
     }
   }, [user]);
 
-  if (!user) return <p className="p-6">Loading dashboard...</p>;
+  if (!user) return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="text-lg text-gray-600"
+      >
+        Loading dashboard...
+      </motion.div>
+    </div>
+  );
 
+  // ===== Action Handlers =====
   const handleDeleteJob = (jobId: string) => {
     if (window.confirm("Are you sure you want to delete this job?")) {
       API.delete(`/jobs/${jobId}`).then(() => {
         setJobs(jobs.filter((job) => job._id !== jobId));
       });
     }
-  }
+  };
+
+  const handleDeleteCompany = (companyId: string) => {
+    if (window.confirm("Are you sure you want to delete this company?")) {
+      API.delete(`/companies/${companyId}`).then(() => {
+        setCompanies(companies.filter((c) => c._id !== companyId));
+      });
+    }
+  };
+
+  const handleVerifyCompany = async (companyId: string, currentStatus: boolean) => {
+    const action = currentStatus ? "unverify" : "verify";
+    if (window.confirm(`Are you sure you want to ${action} this company?`)) {
+      await API.put(`/companies/${companyId}/verify`);
+      fetchCompanies();
+    }
+  };
 
   const handleDeleteCommunity = (communityId: string) => {
     if (window.confirm("Are you sure you want to delete this community?")) {
       API.delete(`/communities/${communityId}`).then(() => {
-        setCommunities(communities.filter((community) => community._id !== communityId));
+        setCommunities(communities.filter((c) => c._id !== communityId));
       });
     }
-  }
+  };
 
   const handleDeleteUser = (userId: string) => {
     if (window.confirm("Are you sure you want to delete this user?")) {
       API.delete(`/admin/users/${userId}`).then(() => {
-        setUsers(users.filter((user) => user._id !== userId));
+        setUsers(users.filter((u) => u._id !== userId));
       });
     }
-  }
+  };
 
   const handleEditJob = (jobId: string) => {
     setSelectedJobId(jobId);
     setShowEditJobModal(true);
-  }
+  };
 
   const handleEditCommunity = (communityId: string) => {
     setSelectedCommunityId(communityId);
     setShowEditCommunityModal(true);
-  }
+  };
 
+  const statsData = [
+    {
+      icon: Briefcase,
+      label: "Total Jobs",
+      value: jobs.length,
+      bgColor: "bg-blue-50",
+      iconColor: "text-blue-600",
+      link: "/admin/jobs",
+      linkText: "Post a new job"
+    },
+    {
+      icon: Building2,
+      label: "Total Companies",
+      value: companies.length,
+      bgColor: "bg-indigo-50",
+      iconColor: "text-indigo-600",
+      action: () => setShowCreateCompanyModal(true),
+      linkText: "Add new company"
+    },
+    {
+      icon: UsersRound,
+      label: "Total Communities",
+      value: communities.length,
+      bgColor: "bg-cyan-50",
+      iconColor: "text-cyan-600",
+      link: "/communities",
+      linkText: "Manage communities"
+    },
+    {
+      icon: Users,
+      label: "Total Users",
+      value: users.length,
+      bgColor: "bg-sky-50",
+      iconColor: "text-sky-600",
+      action: () => setShowCreateCandidateModal(true),
+      linkText: "Create new user"
+    }
+  ];
+
+  // ===== Render =====
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <h2 className="text-2xl font-bold mb-6">Welcome, {user.name}</h2>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Welcome back, {user.name}! 👋
+          </h1>
+          <p className="text-gray-600">Here's an overview of your platform</p>
+        </motion.div>
 
-      {user.role === "admin" && (
-        <>
-          {/* Admin Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            <div className="p-6 bg-white border rounded-lg shadow">
-              <h4 className="text-gray-500">Total Jobs</h4>
-              <p className="text-3xl font-bold">{jobs.length}</p>
-              <Link to="/post-job" className="text-blue-600 hover:underline mt-2 inline-block">Post a new job →</Link>
-            </div>
-            <div className="p-6 bg-white border rounded-lg shadow">
-              <h4 className="text-gray-500">Total Communities</h4>
-              <p className="text-3xl font-bold">{communities.length}</p>
-              <Link to="/communities" className="text-green-600 hover:underline mt-2 inline-block">Manage communities →</Link>
-            </div>
-            <div className="p-6 bg-white border rounded-lg shadow">
-              <h4 className="text-gray-500">Total Users</h4>
-              <p className="text-3xl font-bold">{users.length}</p>
-              <button onClick={() => setShowCreateCandidateModal(true)} className="text-purple-600 hover:underline mt-2 inline-block">Create a new user →</button>
-            </div>
-            <div>
-              <Link
-                to="/dashboard/applications"
-                className={`flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 ${location.pathname === '/dashboard/applications' ? 'bg-gray-100' : ''
-                  }`}
-              >
-                <svg
-                  className="w-5 h-5 mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+        {user.role === "admin" && (
+          <>
+            {/* ===== Dashboard Stats ===== */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.1 }}
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+            >
+              {statsData.map((stat, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  whileHover={{ y: -4, transition: { duration: 0.2 } }}
+                  className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-all"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                  />
-                </svg>
-                <span>Applications</span>
-              </Link>
-            </div>
-          </div>
+                  <div className="flex items-start justify-between mb-4">
+                    <div className={`${stat.bgColor} p-3 rounded-lg`}>
+                      <stat.icon className={`w-6 h-6 ${stat.iconColor}`} />
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-1">{stat.label}</p>
+                  <h3 className="text-3xl font-bold text-gray-900 mb-4">{stat.value}</h3>
+                  {stat.link ? (
+                    <Link
+                      to={stat.link}
+                      className={`${stat.iconColor} text-sm font-medium hover:underline flex items-center gap-1 group`}
+                    >
+                      {stat.linkText}
+                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    </Link>
+                  ) : (
+                    <button
+                      onClick={stat.action}
+                      className={`${stat.iconColor} text-sm font-medium hover:underline flex items-center gap-1 group`}
+                    >
+                      {stat.linkText}
+                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    </button>
+                  )}
+                </motion.div>
+              ))}
+            </motion.div>
 
-          {/* Jobs Table */}
-          <div className="bg-white border rounded-lg shadow">
-            <h3 className="text-xl font-semibold p-4 border-b">Manage Jobs</h3>
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-sm">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Title</th>
-                    <th className="px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Location</th>
-                    <th className="px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                    <th className="px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-3 text-right font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {jobs.map((job) => (
-                    <tr key={job._id}>
-                      <td className="px-6 py-4 whitespace-nowrap">{job.title}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{job.location}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{job.employmentType}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{job.status}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <button onClick={() => handleEditJob(job._id)} className="px-3 py-1 text-xs font-medium text-yellow-600 bg-yellow-100 rounded-full hover:bg-yellow-200">Edit</button>
-                        <button onClick={() => handleDeleteJob(job._id)} className="ml-2 px-3 py-1 text-xs font-medium text-red-600 bg-red-100 rounded-full hover:bg-red-200">Delete</button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Communities Table */}
-          <div className="bg-white border rounded-lg shadow mt-6">
-            <h3 className="text-xl font-semibold p-4 border-b">Manage Communities</h3>
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-sm">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                    <th className="px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Description</th>
-                    <th className="px-6 py-3 text-right font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {communities.map((c) => (
-                    <tr key={c._id}>
-                      <td className="px-6 py-4 whitespace-nowrap">{c.name}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{c.description}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <button className="px-3 py-1 text-xs font-medium text-yellow-600 bg-yellow-100 rounded-full hover:bg-yellow-200">Edit</button>
-                        <button onClick={() => handleDeleteCommunity(c._id)} className="ml-2 px-3 py-1 text-xs font-medium text-red-600 bg-red-100 rounded-full hover:bg-red-200">Delete</button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Users Table */}
-          <div className="bg-white border rounded-lg shadow mt-6">
-            <h3 className="text-xl font-semibold p-4 border-b">Manage Users</h3>
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-sm">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                    <th className="px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                    <th className="px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                    <th className="px-6 py-3 text-right font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {users.map((u) => (
-                    <tr key={u._id}>
-                      <td className="px-6 py-4 whitespace-nowrap">{u.name}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{u.email}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{u.role}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <button className="px-3 py-1 text-xs font-medium text-yellow-600 bg-yellow-100 rounded-full hover:bg-yellow-200">Edit</button>
-                        <button onClick={() => handleDeleteUser(u._id)} className="ml-2 px-3 py-1 text-xs font-medium text-red-600 bg-red-100 rounded-full hover:bg-red-200">Delete</button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </>
-      )}
-
-      {showCreateCandidateModal && (
-        <CreateCandidateModal
-          onClose={() => setShowCreateCandidateModal(false)}
-          onCandidateCreated={fetchUsers}
-        />
-      )}
-
-      {showEditJobModal && selectedJobId && (
-        <EditJobModal
-          jobId={selectedJobId}
-          onClose={() => setShowEditJobModal(false)}
-          onJobUpdated={() => {
-            setShowEditJobModal(false);
-            API.get("/jobs").then((res) => setJobs(res.data));
-          }}
-        />
-      )}
-
-      {/* 
-      {user.role === "user" && (
-        <>
-          <h3 className="text-xl font-semibold mb-4">Community Posts</h3>
-          {posts.map((post) => (
-            <div key={post._id} className="border p-4 mb-4 rounded">
-              <h4 className="font-bold">{post.author?.name}</h4>
-              <p>{post.text}</p>
-              <div className="flex gap-4 mt-2">
-                <button onClick={() => API.post(`/posts/${post._id}/like`).then(() => API.get("/posts").then((res) => setPosts(res.data)))} className="text-blue-500">
-                  👍 {post.likes?.length || 0}
-                </button>
-                <button onClick={() => API.post(`/posts/${post._id}/share`, { text: "Check this!" }).then(() => API.get("/posts").then((res) => setPosts(res.data)))} className="text-green-500">
-                  🔄 {post.shares?.length || 0}
-                </button>
+            {/* ===== Manage Companies ===== */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="bg-white rounded-xl shadow-sm border border-gray-100 mb-8 overflow-hidden"
+            >
+              <div className="px-6 py-5 border-b border-gray-100">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-indigo-50 p-2.5 rounded-lg">
+                      <Building2 className="w-5 h-5 text-indigo-600" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-bold text-gray-900">Manage Companies</h2>
+                      <p className="text-sm text-gray-500 mt-0.5">Verify and manage all companies</p>
+                    </div>
+                  </div>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setShowCreateCompanyModal(true)}
+                    className="flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-sm"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add Company
+                  </motion.button>
+                </div>
               </div>
-            </div>
-          ))}
-        </>
-      )} */}
+
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50 border-b border-gray-100">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Company
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Domain
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Industry
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    <AnimatePresence>
+                      {companies.map((company, index) => (
+                        <motion.tr
+                          key={company._id}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ delay: index * 0.03 }}
+                          className="hover:bg-blue-50/30 transition-colors cursor-pointer"
+                          onClick={() => setSelectedCompany(company)}
+                        >
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center gap-3">
+                              {company.logo ? (
+                                <img
+                                  src={company.logo}
+                                  alt={company.name}
+                                  className="h-10 w-10 rounded-full object-cover ring-2 ring-gray-100"
+                                />
+                              ) : (
+                                <div className="h-10 w-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-semibold text-sm ring-2 ring-gray-100">
+                                  {company.name.charAt(0).toUpperCase()}
+                                </div>
+                              )}
+                              <span className="font-medium text-gray-900">{company.name}</span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                            {company.domain}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                            {company.industry || "-"}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span
+                              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${company.verified
+                                ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20"
+                                : "bg-amber-50 text-amber-700 ring-1 ring-amber-600/20"
+                                }`}
+                            >
+                              {company.verified ? (
+                                <>
+                                  <CheckCircle className="w-3.5 h-3.5" />
+                                  Verified
+                                </>
+                              ) : (
+                                <>
+                                  <Shield className="w-3.5 h-3.5" />
+                                  Pending
+                                </>
+                              )}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-right" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex items-center justify-end gap-1.5">
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleVerifyCompany(company._id, company.verified);
+                                }}
+                                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                title={company.verified ? "Unverify" : "Verify"}
+                              >
+                                {company.verified ? <XCircle className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
+                              </motion.button>
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteCompany(company._id);
+                                }}
+                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                title="Delete"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </motion.button>
+                            </div>
+                          </td>
+                        </motion.tr>
+                      ))}
+                    </AnimatePresence>
+                  </tbody>
+                </table>
+              </div>
+
+              {selectedCompany && (
+                <CompanyDetailsModal
+                  company={selectedCompany}
+                  onClose={() => setSelectedCompany(null)}
+                  onRefresh={fetchCompanies}
+                  isAdmin={user.role === "admin"}
+                />
+              )}
+            </motion.div>
+
+            {/* ===== Manage Jobs ===== */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden"
+            >
+              <div className="px-6 py-5 border-b border-gray-100">
+                <div className="flex items-center gap-3">
+                  <div className="bg-blue-50 p-2.5 rounded-lg">
+                    <Briefcase className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900">Manage Jobs</h2>
+                    <p className="text-sm text-gray-500 mt-0.5">View and manage all job postings</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50 border-b border-gray-100">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Title</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Location</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Type</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    <AnimatePresence>
+                      {jobs.map((job, index) => (
+                        <motion.tr
+                          key={job._id}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ delay: index * 0.03 }}
+                          className="hover:bg-blue-50/30 transition-colors"
+                        >
+                          <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{job.title}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{job.location}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{job.employmentType}</td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20">
+                              {job.status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-right">
+                            <div className="flex items-center justify-end gap-1.5">
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => handleEditJob(job._id)}
+                                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                title="Edit"
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </motion.button>
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => handleDeleteJob(job._id)}
+                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                title="Delete"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </motion.button>
+                            </div>
+                          </td>
+                        </motion.tr>
+                      ))}
+                    </AnimatePresence>
+                  </tbody>
+                </table>
+              </div>
+            </motion.div>
+
+            {/* ===== Modals ===== */}
+            {showCreateCompanyModal && (
+              <CreateCompanyModal
+                onClose={() => setShowCreateCompanyModal(false)}
+                onCreated={fetchCompanies}
+              />
+            )}
+
+            {showCreateCandidateModal && (
+              <CreateCandidateModal
+                onClose={() => setShowCreateCandidateModal(false)}
+                onCandidateCreated={fetchUsers}
+              />
+            )}
+
+            {showEditJobModal && selectedJobId && (
+              <EditJobModal
+                jobId={selectedJobId}
+                onClose={() => setShowEditJobModal(false)}
+                onJobUpdated={() => {
+                  setShowEditJobModal(false);
+                  API.get("/jobs").then((res) => setJobs(res.data));
+                }}
+              />
+            )}
+
+            {showEditCommunityModal && selectedCommunityId && (
+              <EditCommunityModal
+                communityId={selectedCommunityId}
+                onClose={() => setShowEditCommunityModal(false)}
+                onCommunityUpdated={() => {
+                  setShowEditCommunityModal(false);
+                  API.get("/communities").then((res) => setCommunities(res.data));
+                }}
+              />
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 };

@@ -23,11 +23,10 @@ export default function Navbar() {
     };
 
     fetchUser(); // Initial fetch
-
-    window.addEventListener("auth-change", fetchUser); // Refetch on auth change
+    window.addEventListener("auth-change", fetchUser);
 
     return () => {
-      window.removeEventListener("auth-change", fetchUser); // Cleanup
+      window.removeEventListener("auth-change", fetchUser);
     };
   }, []);
 
@@ -63,22 +62,40 @@ export default function Navbar() {
 
             {/* Only admin and employer can see this */}
             {(user?.role === "admin" || user?.role === "employer") && (
-              <NavLink to="/post-job" className={linkClass}>
+              <NavLink to="/admin/jobs" className={linkClass}>
                 Post a Job
               </NavLink>
             )}
 
+            {/* Dashboard only for Admin */}
+            {user?.role === "admin" && (
+              <NavLink to="/dashboard" className={linkClass}>
+                Dashboard
+              </NavLink>
+            )}
           </nav>
 
           {/* Right Section */}
           <div className="hidden md:flex items-center gap-3">
             {user ? (
               <div className="flex items-center gap-3">
-                <img
+                {/* <img
                   src={user.profilePhoto || "https://via.placeholder.com/40"}
                   alt="profile"
                   className="w-8 h-8 rounded-full"
+                /> */}
+
+                <img
+                  src={user?.profilePhoto || "https://via.placeholder.com/40"}
+                  onError={(e) => {
+                    e.currentTarget.src = "https://via.placeholder.com/40";
+                  }}
+                  alt="profile"
+                  className="w-8 h-8 rounded-full object-cover border border-gray-200"
                 />
+
+
+
                 <span className="font-medium">{user.name}</span>
                 <button
                   onClick={handleLogout}
