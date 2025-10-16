@@ -19,6 +19,7 @@ import {
   deletePost,
   getAllApplications,
   updateApplicationStatus,
+  getAdminJobStats,
 } from "../controllers/admin.controller.js";
 import { protect, adminOnly } from "../middlewares/auth.middleware.js";
 import { upload } from "../utils/cloudinary.util.js";
@@ -51,6 +52,9 @@ router.put(
   adminOnly,
   updateApplicationStatus
 );
+
+router.get("/jobs/stats", protect, adminOnly, getAdminJobStats);
+
 
 // COMMUNITY CRUD
 router.post("/communities", protect, adminOnly, createCommunity);

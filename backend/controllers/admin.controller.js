@@ -84,6 +84,35 @@ export const getAllJobs = async (req, res) => {
   }
 };
 
+export const getAdminJobStats = async (req, res) => {
+  try {
+    const now = new Date();
+
+    const totalJobs = await Job.countDocuments();
+    const activeJobs = await Job.countDocuments({
+      isExpired: false,
+      expiresAt: { $gte: now },
+      status: "open",
+    });
+    const expiredJobs = await Job.countDocuments({
+      isExpired: true,
+    });
+    const pendingJobs = await Job.countDocuments({
+      status: "pending",
+    });
+
+    res.json({
+      totalJobs,
+      activeJobs,
+      expiredJobs,
+      pendingJobs,
+    });
+  } catch (err) {
+    console.error("Error in getAdminJobStats:", err);
+    res.status(500).json({ message: err.message });
+  }
+};
+
 export const getAllApplications = async (req, res) => {
   try {
     const page = parseInt(req.query.page || "1");

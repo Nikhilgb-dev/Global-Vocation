@@ -122,6 +122,25 @@ const Jobs = () => {
                 <div className="p-6">
                   <div className="flex justify-between items-start gap-6">
                     <div className="flex-1">
+                      {job.company && (
+                        <div className="flex items-center gap-3 mb-3">
+                          {job.company.logo ? (
+                            <img
+                              src={job.company.logo}
+                              alt={job.company.name}
+                              className="w-10 h-10 rounded-full object-cover ring-1 ring-gray-200"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 bg-green-100 text-green-600 rounded-full flex items-center justify-center font-semibold">
+                              {job.company?.name?.charAt(0)}
+                            </div>
+                          )}
+                          <div>
+                            <h4 className="font-semibold text-gray-800">{job.company.name}</h4>
+                            <p className="text-xs text-gray-500">Posted by {job.postedBy?.name || "Company"}</p>
+                          </div>
+                        </div>
+                      )}
                       {/* Job Title */}
                       <h3 className="text-2xl font-bold text-gray-800 mb-3 group-hover:text-green-600 transition-colors">
                         {job.title}
@@ -151,7 +170,7 @@ const Jobs = () => {
                             <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
-                            {job.salary}
+                            {job.salary} LPA
                           </span>
                         )}
                       </div>
@@ -182,6 +201,53 @@ const Jobs = () => {
                           Posted {new Date(job.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                         </div>
                       )}
+
+                      <div className="flex items-center gap-2 mt-2 text-xs">
+                        {(() => {
+                          let expDate = job.expiresAt ? new Date(job.expiresAt) : null;
+                          if (!expDate || isNaN(expDate.getTime())) {
+                            expDate = new Date(job.createdAt);
+                            expDate.setDate(expDate.getDate() + 30);
+                          }
+
+                          const daysLeft = Math.ceil((expDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                          let badgeClass = "bg-green-100 text-green-700 ring-1 ring-green-600/20";
+                          let badgeText = `Expires on ${expDate.toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          })}`;
+
+                          if (daysLeft <= 0) {
+                            badgeClass = "bg-red-100 text-red-700 ring-1 ring-red-600/20";
+                            badgeText = "Expired";
+                          } else if (daysLeft <= 7) {
+                            badgeClass = "bg-yellow-100 text-yellow-700 ring-1 ring-yellow-600/20";
+                            badgeText = `Expiring Soon (${daysLeft}d)`;
+                          }
+
+                          return (
+                            <span
+                              className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${badgeClass}`}
+                            >
+                              <svg
+                                className="w-3.5 h-3.5 mr-1.5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                                />
+                              </svg>
+                              {badgeText}
+                            </span>
+                          );
+                        })()}
+                      </div>
                     </div>
 
                     {/* Apply Button */}
@@ -236,8 +302,8 @@ const Jobs = () => {
           jobId={selectedJob}
           onClose={() => setShowDetails(false)}
           onApply={(jobId: string) => {
-            setShowDetails(false);     
-            handleApply(jobId);         
+            setShowDetails(false);
+            handleApply(jobId);
           }}
         />
       )}

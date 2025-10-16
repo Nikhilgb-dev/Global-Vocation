@@ -9,7 +9,7 @@ interface Job {
     description?: string;
     location?: string;
     employmentType?: string;
-    salaryRange?: string;
+    salary?: string;
     company?: string;
     applicantsCount?: number;
     status?: string;
@@ -34,7 +34,7 @@ const ManageJobsPage: React.FC = () => {
         description: "",
         location: "",
         employmentType: "Full-time",
-        salaryRange: "",
+        salary: "",
         company: "",
     });
 
@@ -98,7 +98,7 @@ const ManageJobsPage: React.FC = () => {
             description: "",
             location: "",
             employmentType: "Full-time",
-            salaryRange: "",
+            salary: "",
             company: role === "company_admin" ? company?._id : "",
         });
         setEditingJob(null);
@@ -137,7 +137,7 @@ const ManageJobsPage: React.FC = () => {
             description: job.description || "",
             location: job.location || "",
             employmentType: job.employmentType || "Full-time",
-            salaryRange: job.salaryRange || "",
+            salary: job.salary || "",
             company: job.company || "",
         });
         setShowForm(true);
@@ -276,9 +276,9 @@ const ManageJobsPage: React.FC = () => {
                                     Salary Range
                                 </label>
                                 <input
-                                    name="salaryRange"
+                                    name="salary"
                                     placeholder="e.g. $80,000 - $120,000"
-                                    value={form.salaryRange}
+                                    value={form.salary}
                                     onChange={handleChange}
                                     className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                                 />
@@ -376,12 +376,12 @@ const ManageJobsPage: React.FC = () => {
                                                             </svg>
                                                             {job.employmentType}
                                                         </span>
-                                                        {job.salaryRange && (
+                                                        {job.salary && (
                                                             <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
                                                                 <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                                 </svg>
-                                                                {job.salaryRange}
+                                                                {job.salary}
                                                             </span>
                                                         )}
                                                     </div>

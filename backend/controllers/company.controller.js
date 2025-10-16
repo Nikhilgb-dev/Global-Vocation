@@ -293,16 +293,24 @@ export const getMyJobs = async (req, res) => {
     const limit = parseInt(req.query.limit || "20");
     const skip = (page - 1) * limit;
 
-    const [total, jobs] = await Promise.all([
-      Job.countDocuments({ company: companyId }),
-      Job.find({ company: companyId })
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .populate("postedBy", "name email"),
-    ]);
+    const jobs = await Job.find({ company: companyId })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate("postedBy", "name email");
 
-    res.json({ total, page, limit, jobs });
+    const normalized = jobs.map((job) => {
+      if (!job.expiresAt) {
+        const fallback = new Date(job.createdAt);
+        fallback.setDate(fallback.getDate() + 30);
+        job.expiresAt = fallback;
+      }
+      return job;
+    });
+
+    const total = await Job.countDocuments({ company: companyId });
+
+    res.json({ total, page, limit, jobs: normalized });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -377,49 +385,102 @@ export const createEmployeeForCompany = async (req, res) => {
 
 export const updateCompanyApplicationStatus = async (req, res) => {
   try {
-    const { status, notes } = req.body;
+    const applicationId = req.params.id;
+    const payload = req.body || {};
 
-    const application = await Application.findById(req.params.id).populate(
-      "job"
-    );
-    if (!application)
+    // Load application with job + company and user for notifications
+    const application = await Application.findById(applicationId)
+      .populate({
+        path: "job",
+        select: "title company",
+        populate: { path: "company", select: "name" },
+      })
+      .populate("user", "name email");
+
+    if (!application) {
       return res.status(404).json({ message: "Application not found" });
-
-    // Check company ownership
-    if (application.job.company.toString() !== req.user.company.toString()) {
-      return res.status(403).json({ message: "Not authorized" });
     }
 
-    // Update status
-    application.status = status;
-    if (notes) application.metadata.notes = notes;
+    // Safety: ensure the job belongs to the company of the logged-in user
+    const jobCompanyId = application.job?.company?.toString();
+    const userCompanyId = req.user?.company?.toString();
+    if (!jobCompanyId || jobCompanyId !== userCompanyId) {
+      return res
+        .status(403)
+        .json({ message: "Not authorized to modify this application" });
+    }
+
+    // Keep previous status to detect changes
+    const prevStatus = application.status;
+
+    // Allowed fields to update
+    const allowed = [
+      "status",
+      "metadata.notes",
+      "metadata.interviewDate",
+      "metadata.feedback",
+      "metadata.rating",
+      "resume", // if you allow resume replacement
+    ];
+
+    // Apply updates safely
+    // supports nested metadata.* fields
+    for (const key of Object.keys(payload)) {
+      if (allowed.includes(key)) {
+        // nested metadata fields
+        if (key.startsWith("metadata.")) {
+          const metaKey = key.split(".")[1];
+          application.metadata = application.metadata || {};
+          application.metadata[metaKey] = payload[key];
+        } else {
+          application[key] = payload[key];
+        }
+      }
+    }
+
+    // Save application
     await application.save();
 
-    // ✅ Create Notification
-    const jobData = await Job.findById(application.job._id).populate(
-      "company",
-      "name"
-    );
-    if (!jobData)
-      console.warn("⚠️ Job not found for application:", application._id);
+    // If status changed -> create notification (only for meaningful statuses)
+    const newStatus = application.status;
+    const meaningful = [
+      "applied",
+      "reviewed",
+      "interview",
+      "offer",
+      "hired",
+      "rejected",
+    ];
+    if (newStatus !== prevStatus && meaningful.includes(newStatus)) {
+      // Make sure job is loaded with company name
+      const jobTitle = application.job?.title || "your job";
+      const companyName = application.job?.company?.name || "the company";
 
-    // Only create if status is meaningful
-    if (
-      ["reviewed", "interview", "offer", "hired", "rejected"].includes(status)
-    ) {
       await Notification.create({
-        user: application.user,
+        user: application.user._id,
         job: application.job._id,
-        company: jobData.company._id,
-        message: `Your application for "${jobData.title}" at ${jobData.company.name} was marked as ${status}.`,
+        company: application.job.company._id,
+        message: `Your application for "${jobTitle}" at ${companyName} is now "${newStatus}".`,
       });
+
       console.log(
-        "✅ Notification created for user:",
-        application.user.toString()
+        `✅ Notification created for user ${application.user._id} for application ${application._id}`
+      );
+    } else {
+      console.log(
+        `ℹ️ Application ${application._id} updated but status unchanged (${prevStatus} -> ${newStatus})`
       );
     }
 
-    res.json({ message: "Application status updated", application });
+    // Return updated application (populated)
+    const updated = await Application.findById(application._id)
+      .populate("user", "name email profilePhoto")
+      .populate({
+        path: "job",
+        populate: { path: "company", select: "name logo" },
+      });
+
+    res.json({ message: "Application updated", application: updated });
   } catch (err) {
     console.error("❌ Error updating company application status:", err);
     res.status(500).json({ message: err.message });
@@ -432,14 +493,38 @@ export const createJobForCompany = async (req, res) => {
       return res
         .status(400)
         .json({ message: "No company linked to this account" });
+
+    const {
+      title,
+      description,
+      location,
+      salary,
+      employmentType,
+      status,
+      expiresAt,
+    } = req.body;
+
+    if (!title || !description || !location)
+      return res
+        .status(400)
+        .json({ message: "Title, description, and location are required" });
+
     const payload = {
-      ...req.body,
+      title,
+      description,
+      location,
+      salary: salary || "Not Disclosed", // ✅ fallback value
+      employmentType,
+      status: status || "open",
+      expiresAt,
       postedBy: req.user._id,
       company: req.user.company,
     };
+
     const job = await Job.create(payload);
     res.status(201).json(job);
   } catch (err) {
+    console.error("Error creating company job:", err);
     res.status(400).json({ message: err.message });
   }
 };
@@ -515,27 +600,31 @@ export const getCompanyApplicants = async (req, res) => {
 export const getCompanyDashboard = async (req, res) => {
   try {
     const companyId = req.user.company;
+    const now = new Date();
 
-    // number of employees
     const employeesCount = await User.countDocuments({ company: companyId });
-
-    // total jobs created
     const totalJobs = await Job.countDocuments({ company: companyId });
-
-    // open jobs
-    const openJobs = await Job.countDocuments({
+    const activeJobs = await Job.countDocuments({
       company: companyId,
+      isExpired: false,
       status: "open",
+      expiresAt: { $gte: now },
+    });
+    const expiredJobs = await Job.countDocuments({
+      company: companyId,
+      isExpired: true,
+    });
+    const pendingJobs = await Job.countDocuments({
+      company: companyId,
+      status: "pending",
     });
 
-    // total applicants across company jobs
+    // Applicants Stats
     const jobs = await Job.find({ company: companyId }).select("_id");
     const jobIds = jobs.map((j) => j._id);
     const totalApplicants = await Application.countDocuments({
       job: { $in: jobIds },
     });
-
-    // total hired (applications with status "hired")
     const totalHired = await Application.countDocuments({
       job: { $in: jobIds },
       status: "hired",
@@ -544,11 +633,14 @@ export const getCompanyDashboard = async (req, res) => {
     res.json({
       employeesCount,
       totalJobs,
-      openJobs,
+      activeJobs,
+      expiredJobs,
+      pendingJobs,
       totalApplicants,
       totalHired,
     });
   } catch (err) {
+    console.error("Error in getCompanyDashboard:", err);
     res.status(500).json({ message: err.message });
   }
 };

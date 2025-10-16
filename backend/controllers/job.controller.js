@@ -125,9 +125,33 @@ export const createJob = async (req, res) => {
  */
 export const getJobs = async (req, res) => {
   try {
-    const jobs = await Job.find().populate("postedBy", "name email");
-    res.json(jobs);
+    const now = new Date();
+    let query = {};
+
+    query = {
+      $or: [{ isExpired: false }, { isExpired: { $exists: false } }],
+      $or: [{ expiresAt: { $gte: now } }, { expiresAt: { $exists: false } }],
+      status: "open",
+    };
+
+    if (req.user) {
+      if (req.user.role === "admin") {
+        query = {};
+      } else if (req.user.role === "company_admin") {
+        query = { company: req.user.company };
+      }
+    }
+
+    const jobs = await Job.find(query)
+      .sort({ createdAt: -1 })
+      .populate("postedBy", "name email")
+      .populate("company", "name logo");
+
+    console.log("#######jobs######", jobs);
+
+    res.status(200).json(jobs);
   } catch (err) {
+    console.error("❌ Error in getJobs:", err);
     res.status(500).json({ message: err.message });
   }
 };

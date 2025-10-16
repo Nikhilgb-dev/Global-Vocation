@@ -413,6 +413,7 @@ const Dashboard = () => {
                       <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Location</th>
                       <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Type</th>
                       <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Expires On</th>
                       <th className="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
@@ -435,6 +436,21 @@ const Dashboard = () => {
                               {job.status}
                             </span>
                           </td>
+
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                            {(() => {
+                              if (!job.expiresAt) {
+                                // Fallback for older jobs (created before expiry feature)
+                                const fallback = new Date(job.createdAt);
+                                fallback.setDate(fallback.getDate() + 30);
+                                return fallback.toLocaleDateString();
+                              }
+                              const expDate = new Date(job.expiresAt);
+                              return isNaN(expDate.getTime()) ? "N/A" : expDate.toLocaleDateString();
+                            })()}
+                          </td>
+
+
                           <td className="px-6 py-4 whitespace-nowrap text-right">
                             <div className="flex items-center justify-end gap-1.5">
                               <motion.button
