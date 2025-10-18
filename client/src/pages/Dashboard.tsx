@@ -109,13 +109,6 @@ const Dashboard = () => {
     }
   };
 
-  const handleDeleteCommunity = (communityId: string) => {
-    if (window.confirm("Are you sure you want to delete this community?")) {
-      API.delete(`/communities/${communityId}`).then(() => {
-        setCommunities(communities.filter((c) => c._id !== communityId));
-      });
-    }
-  };
 
   const handleDeleteUser = (userId: string) => {
     if (window.confirm("Are you sure you want to delete this user?")) {
@@ -130,10 +123,6 @@ const Dashboard = () => {
     setShowEditJobModal(true);
   };
 
-  const handleEditCommunity = (communityId: string) => {
-    setSelectedCommunityId(communityId);
-    setShowEditCommunityModal(true);
-  };
 
   const statsData = [
     {
