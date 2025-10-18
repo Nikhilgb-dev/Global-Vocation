@@ -3,6 +3,7 @@ import API from "@/api/api";
 import { motion } from "framer-motion";
 import { Bell, CheckCircle, XCircle, Trash2, Eye } from "lucide-react";
 import JobDetailsModal from "@/components/JobDetailsModal";
+import FeedbackButton from "@/components/FeedbackButton";
 
 const StatCard = ({ title, value }: { title: string; value: number }) => (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
@@ -130,6 +131,10 @@ const UserDashboard = () => {
             {selectedJob && (
                 <JobDetailsModal job={selectedJob} onClose={() => setSelectedJob(null)} />
             )}
+
+            <FeedbackButton targetType="platform" />
+
+
         </div>
     );
 };

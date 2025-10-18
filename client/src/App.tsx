@@ -32,6 +32,9 @@ import CompanyApplicantsPage from "./pages/CompanyApplicantsPage";
 import CreateCompanyModal from "./components/CreateCompanyModal";
 import CompanyRegister from "./pages/CompanyRegister";
 import UserDashboard from "./pages/UserDashboard";
+import AdminFeedbacks from "./pages/AdminFeedbacks";
+import UserFeedbackPage from "./pages/UserFeedbackPage";
+import CompanyFeedbackPage from "./pages/CompanyFeedbackPage";
 
 export default function App() {
   return (
@@ -63,6 +66,22 @@ export default function App() {
               />
 
               <Route path="/user/dashboard" element={<UserDashboard />} />
+
+              <Route path="/dashboard/feedback" element={<UserFeedbackPage />} />
+              <Route
+                path="/company/feedback"
+                element={
+                  <CompanyProtectedRoute>
+                    <CompanyFeedbackPage />
+                  </CompanyProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard/feedbacks"
+                element={<AdminFeedbacks />}
+              />
+
+
 
               {/* 🏢 Company Portal Routes */}
               <Route path="/company/login" element={<CompanyLoginPage />} />

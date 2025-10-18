@@ -3,6 +3,7 @@ import API from "@/api/api";
 import { useCompany } from "../contexts/CompanyContext";
 import ApplicationStatusDropdown from "@/components/ApplicationStatusDropdown";
 import ViewResumeModal from "@/components/ViewResumeModal";
+import FeedbackButton from "@/components/FeedbackButton";
 
 type DashboardData = {
     employeesCount: number;
@@ -81,6 +82,9 @@ const CompanyDashboard: React.FC = () => {
                 <StatCard title="Expired Jobs" value={data.expiredJobs} />
                 <StatCard title="Pending Jobs" value={data.pendingJobs} />
             </div>
+
+            <FeedbackButton targetType="platform" />
+
 
             {/* ====== JOB LIST WITH EXPIRY BADGES ====== */}
             <div className="bg-white border rounded-lg shadow-sm p-6 mt-8">

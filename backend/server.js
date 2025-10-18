@@ -10,6 +10,7 @@ import authRoutes from "./routes/auth.route.js";
 import companyRoutes from "./routes/company.routes.js";
 import notificationRoutes from "./routes/notification.routes.js";
 import applicationRoutes from "./routes/application.routes.js";
+import feedbackRoutes from "./routes/feedback.routes.js";
 
 dotenv.config();
 connectDB();
@@ -28,6 +29,7 @@ app.use("/api/communities", communityRoutes);
 app.use("/api/companies", companyRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/applications", applicationRoutes);
+app.use("/api/feedbacks", feedbackRoutes);
 app.use("/api/auth", authRoutes);
 
 const PORT = process.env.PORT || 5000;
