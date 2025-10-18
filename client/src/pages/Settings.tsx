@@ -192,7 +192,7 @@ const Settings = () => {
                 {/* Delete Section */}
                 {!isAdmin && (
                     <div className="mt-10 border-t pt-6">
-                        <h2 className="text-lg font-semibold text-gray-800 mb-3 text-red-600">Danger Zone</h2>
+                        <h2 className="text-lg font-semibold  mb-3 text-red-600">Danger Zone</h2>
                         <button
                             onClick={handleDelete}
                             className="px-5 py-2 border border-red-500 text-red-600 rounded-md hover:bg-red-50 flex items-center gap-2"
