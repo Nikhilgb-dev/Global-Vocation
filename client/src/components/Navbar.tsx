@@ -50,6 +50,13 @@ export default function Navbar() {
     navigate("/login");
   };
 
+  const linkClass = ({ isActive }: { isActive: boolean }) =>
+    `px-3 py-2 rounded-md text-sm font-medium ${isActive
+      ? "text-blue-600 bg-blue-50"
+      : "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
+    } transition-all duration-150`;
+
+
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   return (
@@ -178,6 +185,10 @@ export default function Navbar() {
                 >
                   Logout
                 </button>
+
+                <NavLink to="/settings" className={linkClass}>
+                  Settings
+                </NavLink>
               </>
             ) : (
               <>
@@ -193,6 +204,7 @@ export default function Navbar() {
                 >
                   Sign up
                 </NavLink>
+
               </>
             )}
           </div>

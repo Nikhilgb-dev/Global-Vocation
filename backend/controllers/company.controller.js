@@ -264,6 +264,43 @@ export const updateMyJob = async (req, res) => {
   }
 };
 
+export const getMyCompany = async (req, res) => {
+  try {
+    const company = await Company.findById(req.user.company);
+    if (!company) return res.status(404).json({ message: "Company not found" });
+    res.json(company);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const updateMyCompany = async (req, res) => {
+  try {
+    const { name, domain, industry, size, type, tagline, description } =
+      req.body;
+    const company = await Company.findById(req.user.company);
+    if (!company) return res.status(404).json({ message: "Company not found" });
+
+    if (name) company.name = name;
+    if (domain) company.domain = domain;
+    if (industry) company.industry = industry;
+    if (size) company.size = size;
+    if (type) company.type = type;
+    if (tagline) company.tagline = tagline;
+    if (description) company.description = description;
+
+    // optional logo upload
+    if (req.file) {
+      company.logo = await uploadToCloudinary(req.file, "company_logos");
+    }
+
+    await company.save();
+    res.json({ message: "Company info updated successfully", company });
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+};
+
 export const getMyCompanyProfile = async (req, res) => {
   try {
     if (!req.user.company)

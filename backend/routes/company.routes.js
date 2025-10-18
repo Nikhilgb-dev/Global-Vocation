@@ -18,6 +18,8 @@ import {
   registerCompany,
   createEmployeeForCompany,
   updateCompanyApplicationStatus,
+  updateMyCompany,
+  getMyCompany,
 } from "../controllers/company.controller.js";
 import { companyLogin } from "../controllers/companyAuth.controller.js";
 import {
@@ -82,6 +84,15 @@ router.post(
 );
 router.put("/:id/verify", protect, adminOnly, verifyCompany);
 router.delete("/:id", protect, adminOnly, deleteCompany);
+
+router.get("/me", protect, companyAdminOnly, getMyCompany);
+router.put(
+  "/me",
+  protect,
+  companyAdminOnly,
+  upload.single("logo"),
+  updateMyCompany
+);
 
 // ---- Must always come LAST ----
 router.get("/", getAllCompanies);

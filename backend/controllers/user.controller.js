@@ -24,6 +24,56 @@ export const getAllUsers = async (req, res) => {
   }
 };
 
+export const getMyProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select("-password");
+    if (!user) return res.status(404).json({ message: "User not found" });
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const updateMyProfile = async (req, res) => {
+  try {
+    const { name, location, password } = req.body;
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    if (name) user.name = name;
+    if (location) user.location = location;
+
+    // optional password update
+    if (password && password.trim().length >= 6) {
+      user.password = await bcrypt.hash(password, 10);
+    }
+
+    // optional profile photo upload
+    if (req.file) {
+      user.profilePhoto = await uploadToCloudinary(req.file, "profile_photos");
+    }
+
+    await user.save();
+    res.json({
+      message: "Profile updated successfully",
+      user: { ...user.toObject(), password: undefined },
+    });
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+};
+
+// ===== DELETE MY ACCOUNT =====
+export const deleteMyAccount = async (req, res) => {
+  try {
+    const user = await User.findByIdAndDelete(req.user._id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+    res.json({ message: "Account deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 // ========== GET SINGLE USER ==========
 export const getUserById = async (req, res) => {
   try {

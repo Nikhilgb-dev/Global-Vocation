@@ -19,6 +19,22 @@ export const createUser = async (req, res) => {
   }
 };
 
+export const updateAdminProfile = async (req, res) => {
+  try {
+    const { name, password } = req.body;
+    const admin = await User.findById(req.user._id);
+    if (!admin) return res.status(404).json({ message: "Admin not found" });
+
+    if (name) admin.name = name;
+    if (password) admin.password = await bcrypt.hash(password, 10);
+    await admin.save();
+
+    res.json({ message: "Admin profile updated", admin });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 export const getAllUsers = async (req, res) => {
   try {
     const users = await User.find().select("-password");

@@ -35,6 +35,7 @@ import UserDashboard from "./pages/UserDashboard";
 import AdminFeedbacks from "./pages/AdminFeedbacks";
 import UserFeedbackPage from "./pages/UserFeedbackPage";
 import CompanyFeedbackPage from "./pages/CompanyFeedbackPage";
+import Settings from "./pages/Settings";
 
 export default function App() {
   return (
@@ -80,6 +81,9 @@ export default function App() {
                 path="/dashboard/feedbacks"
                 element={<AdminFeedbacks />}
               />
+
+              <Route path="/settings" element={<Settings />} />
+
 
 
 
