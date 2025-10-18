@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import API from "@/api/api";
 import { motion } from "framer-motion";
-import { Bell, CheckCircle, XCircle, Trash2, Eye } from "lucide-react";
+import { CheckCircle, XCircle, Trash2, Eye } from "lucide-react";
 import JobDetailsModal from "@/components/JobDetailsModal";
 import FeedbackButton from "@/components/FeedbackButton";
 
