@@ -9,6 +9,7 @@ interface Feedback {
   message: string;
   rating?: number;
   reply?: string;
+  subject?: string;
   repliedAt?: string;
   targetType: "platform" | "company";
   targetId?: { name?: string };
@@ -109,8 +110,8 @@ const AdminFeedbacks: React.FC = () => {
               key={type}
               onClick={() => setFilter(type)}
               className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-sm ${filter === type
-                  ? "bg-blue-600 text-white shadow-blue-200"
-                  : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200"
+                ? "bg-blue-600 text-white shadow-blue-200"
+                : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200"
                 }`}
             >
               {type === "all"
@@ -186,8 +187,8 @@ const AdminFeedbacks: React.FC = () => {
                             </div>
                             <div className="text-xs text-gray-500 capitalize flex items-center gap-2 mt-0.5">
                               <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${fb.submittedBy === "user"
-                                  ? "bg-blue-100 text-blue-700"
-                                  : "bg-indigo-100 text-indigo-700"
+                                ? "bg-blue-100 text-blue-700"
+                                : "bg-indigo-100 text-indigo-700"
                                 }`}>
                                 {fb.submittedBy}
                               </span>
@@ -214,6 +215,14 @@ const AdminFeedbacks: React.FC = () => {
                           {/* Message */}
                           <p className="text-gray-700 text-sm leading-relaxed mb-3">
                             {fb.message}
+                          </p>
+
+                          {/* Subject */}
+                          <p className="text-sm font-medium text-blue-900 mb-1">
+                            Subject
+                          </p>
+                          <p className="text-sm text-blue-800">
+                            {fb.subject}
                           </p>
 
                           {/* Rating */}

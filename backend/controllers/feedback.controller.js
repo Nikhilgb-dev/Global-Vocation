@@ -4,7 +4,7 @@ import User from "../models/user.model.js";
 
 export const createFeedback = async (req, res) => {
   try {
-    const { message, rating, targetType, targetId } = req.body;
+    const { message, rating, targetType, targetId, subject } = req.body;
     const submittedBy = req.user.role === "company_admin" ? "company" : "user";
 
     if (!message || !targetType)
@@ -24,6 +24,7 @@ export const createFeedback = async (req, res) => {
       targetType,
       targetId: targetType === "company" ? targetId : null,
       message,
+      subject,
       rating,
       submittedBy,
     });

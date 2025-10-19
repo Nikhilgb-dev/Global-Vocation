@@ -7,12 +7,14 @@ interface FeedbackModalProps {
     onClose: () => void;
     targetType: "platform" | "company";
     targetId?: string;
+    subject?: string;
     onSubmitted?: () => void;
 }
 
-const FeedbackModal: React.FC<FeedbackModalProps> = ({ onClose, targetType, targetId, onSubmitted }) => {
+const FeedbackModal: React.FC<FeedbackModalProps> = ({ onClose, targetType, targetId, subject, onSubmitted }) => {
     const [message, setMessage] = useState("");
     const [rating, setRating] = useState<number | null>(null);
+    const [subjectValue, setSubjectValue] = useState(subject || "");
     const [loading, setLoading] = useState(false);
     const [hoveredRating, setHoveredRating] = useState<number | null>(null);
 
@@ -29,6 +31,7 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({ onClose, targetType, targ
                 targetType,
                 targetId,
                 message,
+                subject: subjectValue,
                 rating,
             });
             toast.success("Feedback submitted successfully!");
@@ -109,6 +112,16 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({ onClose, targetType, targ
 
                     {/* Message Section */}
                     <div className="space-y-3">
+                        <label htmlFor="feedback-message" className="block text-sm font-semibold text-gray-700">
+                            Subject
+                        </label>
+                        <input
+                            type="text"
+                            value={subjectValue}
+                            onChange={(e) => setSubjectValue(e.target.value)}
+                            placeholder="Enter feedback subject..."
+                            className="px-4 py-2 border-2 border-gray-200 rounded-xl w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all placeholder:text-gray-400"
+                        />
                         <label htmlFor="feedback-message" className="block text-sm font-semibold text-gray-700">
                             Your feedback
                         </label>
