@@ -4,6 +4,7 @@ import { useCompany } from "../contexts/CompanyContext";
 import ApplicationStatusDropdown from "@/components/ApplicationStatusDropdown";
 import ViewResumeModal from "@/components/ViewResumeModal";
 import FeedbackButton from "@/components/FeedbackButton";
+import ApplicantDetailsModal from "@/components/ApplicantDetailsModal";
 
 type DashboardData = {
     employeesCount: number;
@@ -29,6 +30,7 @@ const CompanyDashboard: React.FC = () => {
     const [applicants, setApplicants] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [resumeUrl, setResumeUrl] = useState<string | null>(null);
+    const [selectedApplicant, setSelectedApplicant] = useState<any | null>(null);
     const [companyJobs, setCompanyJobs] = useState<any[]>([]);
     const fetchDashboard = async () => {
         const res = await API.get("/companies/me/dashboard");
@@ -162,6 +164,7 @@ const CompanyDashboard: React.FC = () => {
                                     <th className="p-2 text-left">Status</th>
                                     <th className="p-2 text-left">Applied On</th>
                                     <th className="p-2 text-left">Resume</th>
+                                    <th className="p-2 text-left">Details</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -201,6 +204,22 @@ const CompanyDashboard: React.FC = () => {
                                         >
                                             View Resume
                                         </td>
+
+                                        <td
+                                            className="p-2 text-blue-600 hover:underline cursor-pointer"
+                                            onClick={() => setSelectedApplicant(a)}
+                                        >
+                                            View Details
+                                        </td>
+
+                                        {selectedApplicant && (
+                                            <ApplicantDetailsModal
+                                                applicant={selectedApplicant}
+                                                onClose={() => setSelectedApplicant(null)}
+                                            />
+                                        )}
+
+
                                     </tr>
                                 ))}
                             </tbody>

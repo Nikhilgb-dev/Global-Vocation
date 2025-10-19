@@ -82,6 +82,48 @@ export const applyJob = async (req, res) => {
       }
     }
 
+    let educationData = [];
+    if (req.body.education) {
+      try {
+        const parsedEdu =
+          typeof req.body.education === "string"
+            ? JSON.parse(req.body.education)
+            : req.body.education;
+        if (Array.isArray(parsedEdu)) {
+          educationData = parsedEdu.map((e) => ({
+            school: e.school || "",
+            degree: e.degree || "",
+            fieldOfStudy: e.fieldOfStudy || "",
+            startDate: e.startDate ? new Date(e.startDate) : null,
+            endDate: e.endDate ? new Date(e.endDate) : null,
+          }));
+        }
+      } catch (err) {
+        console.warn("Invalid education data:", err);
+      }
+    }
+
+    let projectData = [];
+    if (req.body.project) {
+      try {
+        const parsedProject =
+          typeof req.body.project === "string"
+            ? JSON.parse(req.body.project)
+            : req.body.project;
+        if (Array.isArray(parsedProject)) {
+          projectData = parsedProject.map((p) => ({
+            name: p.name || "",
+            description: p.description || "",
+            link: p.link || "",
+            startDate: p.startDate ? new Date(p.startDate) : null,
+            endDate: p.endDate ? new Date(p.endDate) : null,
+          }));
+        }
+      } catch (err) {
+        console.warn("Invalid project data:", err);
+      }
+    }
+
     // create application
     const application = await Application.create({
       job: jobId,
@@ -91,12 +133,19 @@ export const applyJob = async (req, res) => {
       coverLetter,
       contact: finalContact,
       experience: experienceData,
+      education: educationData,
+      project: projectData,
       status: "applied",
       timeline: { appliedAt: new Date() },
     });
 
     job.applicantsCount = (job.applicantsCount || 0) + 1;
     await job.save();
+
+    console.log(
+      "----------------Application submitted---------------------",
+      application
+    );
 
     return res.status(201).json({
       message: "Application submitted successfully",

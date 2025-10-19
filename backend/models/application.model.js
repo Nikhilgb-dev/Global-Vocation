@@ -22,6 +22,25 @@ const contactSchema = new mongoose.Schema(
   { _id: false }
 );
 
+const educationSchema = new mongoose.Schema(
+  {
+    school: String,
+    degree: String,
+    fieldOfStudy: String,
+    startDate: Date,
+    endDate: Date,
+  },
+  { _id: false }
+);
+
+const projectSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  link: { type: String },
+  description: { type: String, required: true },
+  startDate: { type: Date },
+  endDate: { type: Date },
+});
+
 const applicationSchema = new mongoose.Schema(
   {
     job: {
@@ -62,6 +81,10 @@ const applicationSchema = new mongoose.Schema(
       years: { type: Number, default: 0 },
       history: [experienceSchema],
     },
+
+    education: [educationSchema],
+
+    project: [projectSchema],
 
     // hiring lifecycle status
     status: {

@@ -19,6 +19,14 @@ interface ExperienceItem {
 
 const ApplyModal: React.FC<ApplyModalProps> = ({ jobId, onClose, initialContact }) => {
   const [currentStep, setCurrentStep] = useState(1);
+  const [educationHistory, setEducationHistory] = useState([
+    { school: "", degree: "", fieldOfStudy: "", startDate: "", endDate: "" },
+  ]);
+
+  const [projects, setProjects] = useState([
+    { name: "", description: "", link: "", startDate: "", endDate: "" },
+  ]);
+
   const [resumeFile, setResumeFile] = useState<File | null>(null);
 
   const [name, setName] = useState<string>(initialContact?.name || "");
@@ -108,6 +116,23 @@ const ApplyModal: React.FC<ApplyModalProps> = ({ jobId, onClose, initialContact 
     setCurrentStep(currentStep - 1);
   };
 
+  const handleProjectChange = (index: number, field: keyof (typeof projects)[0], value: string) => {
+    const updated = [...projects];
+    updated[index][field] = value;
+    setProjects(updated);
+  };
+
+  const addProjectField = () => {
+    setProjects([
+      ...projects,
+      { name: "", description: "", link: "", startDate: "", endDate: "" },
+    ]);
+  };
+
+  const removeProjectField = (index: number) => {
+    setProjects(projects.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = async () => {
     if (!validateStep(3)) return;
 
@@ -123,6 +148,10 @@ const ApplyModal: React.FC<ApplyModalProps> = ({ jobId, onClose, initialContact 
     formData.append("coverLetter", coverLetter);
     formData.append("contact", JSON.stringify(contact));
     formData.append("experience", JSON.stringify(experienceData));
+    formData.append("education", JSON.stringify(educationHistory));
+    formData.append("project", JSON.stringify(projects));
+
+    console.log("-------------------form Data----------------", formData)
 
     try {
       await API.post(`/jobs/${jobId}/apply`, formData, {
@@ -139,6 +168,8 @@ const ApplyModal: React.FC<ApplyModalProps> = ({ jobId, onClose, initialContact 
     { number: 1, title: "Contact Info", icon: "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" },
     { number: 2, title: "Resume & Letter", icon: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" },
     { number: 3, title: "Experience", icon: "M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" },
+    { number: 4, title: "Education", icon: "M12 14l9-5-9-5-9 5 9 5zm0 7V14" },
+    { number: 5, title: "Projects", icon: "M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" },
   ];
 
   return (
@@ -166,8 +197,8 @@ const ApplyModal: React.FC<ApplyModalProps> = ({ jobId, onClose, initialContact 
                 <div className="flex flex-col items-center flex-1">
                   <div
                     className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 ${currentStep >= step.number
-                        ? "bg-blue-600 text-white shadow-lg"
-                        : "bg-gray-200 text-gray-500"
+                      ? "bg-blue-600 text-white shadow-lg"
+                      : "bg-gray-200 text-gray-500"
                       }`}
                   >
                     {currentStep > step.number ? (
@@ -260,15 +291,31 @@ const ApplyModal: React.FC<ApplyModalProps> = ({ jobId, onClose, initialContact 
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Alternate Phone
+                      WhatsApp Number
                     </label>
-                    <input
-                      type="tel"
-                      placeholder="+1 (555) 987-6543"
-                      value={altPhone}
-                      onChange={(e) => setAltPhone(e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                    />
+
+                    <div className="flex items-center gap-3 mb-3">
+                      <input
+                        type="checkbox"
+                        id="sameAsPhone"
+                        checked={altPhone === phone}
+                        onChange={(e) => setAltPhone(e.target.checked ? phone : "")}
+                        className="w-4 h-4 text-blue-600"
+                      />
+                      <label htmlFor="sameAsPhone" className="text-sm text-gray-700">
+                        Same as Phone Number
+                      </label>
+                    </div>
+
+                    {altPhone !== phone && (
+                      <input
+                        type="tel"
+                        placeholder="+1 (555) 987-6543"
+                        value={altPhone}
+                        onChange={(e) => setAltPhone(e.target.value)}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      />
+                    )}
                   </div>
                 </div>
               </div>
@@ -482,6 +529,220 @@ const ApplyModal: React.FC<ApplyModalProps> = ({ jobId, onClose, initialContact 
               </div>
             </div>
           )}
+
+          {/* Step 4: Education */}
+          {currentStep === 4 && (
+            <div className="space-y-5 animate-fadeIn">
+              <div>
+                <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5zm0 7V14" />
+                  </svg>
+                  Education Qualifications
+                </h3>
+                <p className="text-gray-600 text-sm mb-6">Add your academic background</p>
+              </div>
+
+              <div className="space-y-4">
+                {educationHistory.map((edu, idx) => (
+                  <div key={idx} className="p-5 border-2 border-gray-200 rounded-xl bg-gray-50 space-y-3">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="font-semibold text-gray-800 flex items-center gap-2">
+                        <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                          {idx + 1}
+                        </div>
+                        Education #{idx + 1}
+                      </span>
+                      {educationHistory.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => setEducationHistory(educationHistory.filter((_, i) => i !== idx))}
+                          className="text-red-600 hover:text-red-700 text-sm font-medium"
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+
+                    <input
+                      type="text"
+                      placeholder="School / University"
+                      value={edu.school}
+                      onChange={(e) => {
+                        const updated = [...educationHistory];
+                        updated[idx].school = e.target.value;
+                        setEducationHistory(updated);
+                      }}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Degree (e.g. B.Tech, MBA)"
+                      value={edu.degree}
+                      onChange={(e) => {
+                        const updated = [...educationHistory];
+                        updated[idx].degree = e.target.value;
+                        setEducationHistory(updated);
+                      }}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Field of Study (e.g. Computer Science)"
+                      value={edu.fieldOfStudy}
+                      onChange={(e) => {
+                        const updated = [...educationHistory];
+                        updated[idx].fieldOfStudy = e.target.value;
+                        setEducationHistory(updated);
+                      }}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    />
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Start Date</label>
+                        <input
+                          type="date"
+                          value={edu.startDate}
+                          onChange={(e) => {
+                            const updated = [...educationHistory];
+                            updated[idx].startDate = e.target.value;
+                            setEducationHistory(updated);
+                          }}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">End Date</label>
+                        <input
+                          type="date"
+                          value={edu.endDate}
+                          onChange={(e) => {
+                            const updated = [...educationHistory];
+                            updated[idx].endDate = e.target.value;
+                            setEducationHistory(updated);
+                          }}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setEducationHistory([...educationHistory, { school: "", degree: "", fieldOfStudy: "", startDate: "", endDate: "" }])
+                  }
+                  className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  Add Education
+                </button>
+              </div>
+            </div>
+          )}
+
+          {currentStep === 5 && (
+            <div className="space-y-5 animate-fadeIn">
+              <div>
+                <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  Projects
+                </h3>
+                <p className="text-gray-600 text-sm mb-6">
+                  Showcase your personal or professional projects
+                </p>
+              </div>
+
+              {projects.map((proj, idx) => (
+                <div key={idx} className="p-5 border-2 border-gray-200 rounded-xl bg-gray-50 space-y-3">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="font-semibold text-gray-800 flex items-center gap-2">
+                      <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                        {idx + 1}
+                      </div>
+                      Project #{idx + 1}
+                    </span>
+                    {projects.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeProjectField(idx)}
+                        className="text-red-600 hover:text-red-700 text-sm font-medium"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+
+                  <input
+                    type="text"
+                    placeholder="Project Name"
+                    value={proj.name}
+                    onChange={(e) => handleProjectChange(idx, "name", e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  />
+
+                  <textarea
+                    placeholder="Project Description"
+                    value={proj.description}
+                    onChange={(e) => handleProjectChange(idx, "description", e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 resize-none"
+                    rows={3}
+                  />
+
+                  <input
+                    type="text"
+                    placeholder="Project Link (optional)"
+                    value={proj.link}
+                    onChange={(e) => handleProjectChange(idx, "link", e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  />
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                        Start Date
+                      </label>
+                      <input
+                        type="date"
+                        value={proj.startDate}
+                        onChange={(e) => handleProjectChange(idx, "startDate", e.target.value)}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                        End Date
+                      </label>
+                      <input
+                        type="date"
+                        value={proj.endDate}
+                        onChange={(e) => handleProjectChange(idx, "endDate", e.target.value)}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              <button
+                type="button"
+                onClick={addProjectField}
+                className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                Add Another Project
+              </button>
+            </div>
+          )}
+
         </div>
 
         {/* Footer Actions */}
@@ -497,7 +758,7 @@ const ApplyModal: React.FC<ApplyModalProps> = ({ jobId, onClose, initialContact 
             {currentStep === 1 ? "Cancel" : "Back"}
           </button>
 
-          {currentStep < 3 ? (
+          {currentStep < 5 ? (
             <button
               type="button"
               onClick={handleNext}

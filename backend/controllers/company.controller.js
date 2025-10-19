@@ -441,7 +441,10 @@ export const updateCompanyApplicationStatus = async (req, res) => {
     // Safety: ensure the job belongs to the company of the logged-in user
     const jobCompanyId = application.job?.company?.toString();
     const userCompanyId = req.user?.company?.toString();
-    if (!jobCompanyId || jobCompanyId !== userCompanyId) {
+    if (
+      req.user.role !== "company_admin" &&
+      (!jobCompanyId || jobCompanyId !== userCompanyId)
+    ) {
       return res
         .status(403)
         .json({ message: "Not authorized to modify this application" });
@@ -457,7 +460,7 @@ export const updateCompanyApplicationStatus = async (req, res) => {
       "metadata.interviewDate",
       "metadata.feedback",
       "metadata.rating",
-      "resume", // if you allow resume replacement
+      "resume",
     ];
 
     // Apply updates safely

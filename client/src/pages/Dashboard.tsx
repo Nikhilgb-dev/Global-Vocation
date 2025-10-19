@@ -7,6 +7,8 @@ import EditCommunityModal from "../components/EditCommunityModal";
 import CreateCompanyModal from "../components/CreateCompanyModal";
 import CompanyDetailsModal from "../components/CompanyDetailsModal";
 import { motion, AnimatePresence } from "framer-motion";
+import ApplicantDetailsModal from "@/components/ApplicantDetailsModal";
+
 import {
   Briefcase,
   Building2,
@@ -32,6 +34,7 @@ const Dashboard = () => {
   const [companies, setCompanies] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [posts, setPosts] = useState<any[]>([]);
+  const [selectedApplicant, setSelectedApplicant] = useState<any | null>(null);
   const [showCreateCandidateModal, setShowCreateCandidateModal] = useState(false);
   const [showEditJobModal, setShowEditJobModal] = useState(false);
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
@@ -506,6 +509,7 @@ const Dashboard = () => {
                       <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
                       <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Resume</th>
                       <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Applied On</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Details</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
@@ -570,6 +574,21 @@ const Dashboard = () => {
                           </td>
                           {resumeUrl && (
                             <ViewResumeModal resumeUrl={resumeUrl} onClose={() => setResumeUrl(null)} />
+                          )}
+
+
+                          <td
+                            className="px-6 py-4 text-sm text-blue-600 underline cursor-pointer"
+                            onClick={() => setSelectedApplicant(a)}
+                          >
+                            View Details
+                          </td>
+
+                          {selectedApplicant && (
+                            <ApplicantDetailsModal
+                              applicant={selectedApplicant}
+                              onClose={() => setSelectedApplicant(null)}
+                            />
                           )}
 
                         </motion.tr>
