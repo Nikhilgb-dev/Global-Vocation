@@ -41,7 +41,7 @@ app.use("/api/freelancers", freelanceRoutes);
 app.use(express.static(path.join(__dirname, "/client/dist")));
 
 app.get(/^(?!\/api).*/, (req, res) => {
-  res.sendFile(path.join(__dirname, "clinet", "dist", "index.html"));
+  res.sendFile(path.join(__dirname, "client", "dist", "index.html"));
 });
 
 const PORT = process.env.PORT || 5000;
