@@ -12,6 +12,9 @@ import notificationRoutes from "./routes/notification.routes.js";
 import applicationRoutes from "./routes/application.routes.js";
 import feedbackRoutes from "./routes/feedback.routes.js";
 import freelanceRoutes from "./routes/freelancer.routes.js";
+import path from "path";
+
+const __dirname = path.resolve();
 
 dotenv.config();
 connectDB();
@@ -21,7 +24,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.get("/", (req, res) => res.send("Job Portal API running..."));
+// app.get("/", (req, res) => res.send("Job Portal API running..."));
 
 app.use("/api/admin", adminRoutes);
 app.use("/api/users", userRoutes);
@@ -34,6 +37,12 @@ app.use("/api/applications", applicationRoutes);
 app.use("/api/feedbacks", feedbackRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/freelancers", freelanceRoutes);
+
+app.use(express.static(path.join(__dirname, "/client/dist")));
+
+app.get(/^(?!\/api).*/, (req, res) => {
+  res.sendFile(path.join(__dirname, "clinet", "dist", "index.html"));
+});
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
