@@ -1,6 +1,6 @@
 import Freelancer from "../models/freelancer.model.js";
 import { uploadToCloudinary } from "../utils/cloudinary.util.js";
-
+import FreelancerApplication from "../models/freelancerApplication.model.js";
 export const createFreelancer = async (req, res) => {
   try {
     const {
@@ -50,10 +50,108 @@ export const createFreelancer = async (req, res) => {
   }
 };
 
+export const applyToFreelancer = async (req, res) => {
+  try {
+    const { id } = req.params; // freelancer ID
+    const freelancer = await Freelancer.findById(id);
+    if (!freelancer)
+      return res.status(404).json({ message: "Freelancer not found" });
+
+    // Parse form data
+    const { contact, experience, education, project, coverLetter } = req.body;
+
+    const parsedContact = JSON.parse(contact || "{}");
+    const parsedExperience = JSON.parse(experience || "{}");
+    const parsedEducation = JSON.parse(education || "[]");
+    const parsedProject = JSON.parse(project || "[]");
+
+    // Prevent duplicate application
+    const existing = await Application.findOne({
+      freelancer: id,
+      user: req.user._id,
+    });
+    if (existing)
+      return res
+        .status(400)
+        .json({ message: "Already applied for this freelancer" });
+
+    // Upload resume if provided
+    let resumeUrl = null;
+    if (req.file) {
+      resumeUrl = await uploadToCloudinary(req.file, "resumes");
+    }
+
+    const application = await Application.create({
+      freelancer: id,
+      user: req.user._id,
+      resume: resumeUrl,
+      coverLetter,
+      contact: parsedContact,
+      experience: parsedExperience,
+      education: parsedEducation,
+      project: parsedProject,
+      status: "applied",
+      isActive: true,
+      timeline: { appliedAt: new Date() },
+    });
+
+    res.status(201).json({
+      message: "Application submitted successfully",
+      application,
+    });
+  } catch (err) {
+    console.error("❌ Error applying to freelancer:", err);
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// Get all applications for a freelancer (for company/freelancer owner)
+export const getFreelancerApplications = async (req, res) => {
+  try {
+    const { id } = req.params; // freelancer ID
+    const applications = await FreelancerApplication.find({ freelancer: id })
+      .populate("user", "name email profilePhoto")
+      .sort({ createdAt: -1 });
+
+    res.json(applications);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// Get all applications by the current user
+export const getMyFreelancerApplications = async (req, res) => {
+  try {
+    const applications = await FreelancerApplication.find({
+      user: req.user._id,
+    })
+      .populate("freelancer", "name qualification location photo")
+      .sort({ createdAt: -1 });
+
+    res.json(applications);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 export const getAllFreelancers = async (req, res) => {
   try {
     const freelancers = await Freelancer.find().sort({ createdAt: -1 });
-    res.json(freelancers);
+
+    let applied = [];
+    if (req.user) {
+      const userApps = await FreelancerApplication.find({
+        user: req.user._id,
+      }).select("freelancer");
+      applied = userApps.map((a) => a.freelancer.toString());
+    }
+
+    const result = freelancers.map((f) => ({
+      ...f.toObject(),
+      hasApplied: applied.includes(f._id.toString()),
+    }));
+
+    res.json(result);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

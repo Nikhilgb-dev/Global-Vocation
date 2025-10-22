@@ -23,7 +23,7 @@ const AddFreelancer: React.FC<{ onAdded?: () => void }> = ({ onAdded }) => {
     const [services, setServices] = useState<Service[]>([
         { title: "", description: "", link: "", achievements: [""], otherDetails: "" },
     ]);
-    const [pricing, setPricing] = useState({ min: 0, max: 0 });
+    const [pricing, setPricing] = useState({ min: "", max: "" });
     const [loading, setLoading] = useState(false);
 
     const preferenceOptions = ["Remote", "On-site", "Contract", "Agreement", "MOU"];
@@ -93,7 +93,7 @@ const AddFreelancer: React.FC<{ onAdded?: () => void }> = ({ onAdded }) => {
             setAboutFreelancer("");
             setPhoto(null);
             setServices([{ title: "", description: "", link: "", achievements: [""], otherDetails: "" }]);
-            setPricing({ min: 0, max: 0 });
+            setPricing({ min: "", max: "" });
         } catch (err: any) {
             toast.error(err.response?.data?.message || "Failed to add freelancer");
         } finally {
@@ -170,8 +170,10 @@ const AddFreelancer: React.FC<{ onAdded?: () => void }> = ({ onAdded }) => {
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                    <input type="number" placeholder="Starting Price" value={pricing.min} onChange={(e) => setPricing({ ...pricing, min: +e.target.value })} className="input" />
-                    <input type="number" placeholder="Max Price" value={pricing.max} onChange={(e) => setPricing({ ...pricing, max: +e.target.value })} className="input" />
+                    Min-Price
+                    <input type="number" placeholder="Starting Price" value={pricing.min} onChange={(e) => setPricing({ ...pricing, min: e.target.value })} className="input" />
+                    Max-Price
+                    <input type="number" placeholder="Max Price" value={pricing.max} onChange={(e) => setPricing({ ...pricing, max: e.target.value })} className="input" />
                 </div>
 
                 <button

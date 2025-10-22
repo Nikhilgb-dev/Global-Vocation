@@ -37,6 +37,7 @@ import UserFeedbackPage from "./pages/UserFeedbackPage";
 import CompanyFeedbackPage from "./pages/CompanyFeedbackPage";
 import Settings from "./pages/Settings";
 import FreelancerList from "./pages/FreelancerList";
+import Freelancers from "./pages/Freelancers";
 
 export default function App() {
   return (
@@ -122,6 +123,7 @@ export default function App() {
               {/* Optional Admin Job Management */}
               <Route path="/admin/jobs" element={<ManageJobsPage />} />
               <Route path="/admin/freelancers" element={<FreelancerList />} />
+              <Route path="/freelancers" element={<Freelancers />} />
             </Routes>
           </main>
 

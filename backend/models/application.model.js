@@ -60,6 +60,12 @@ const applicationSchema = new mongoose.Schema(
       ref: "Company",
     },
 
+    freelancer: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Freelancer",
+      default: null,
+    },
+
     resume: {
       type: String,
       required: true,

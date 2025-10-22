@@ -86,6 +86,19 @@ export default function Navbar() {
               Companies
             </NavLink>
 
+            <NavLink
+              to="/freelancers"
+              className={({ isActive }) =>
+                `px-3 py-2 rounded-md text-sm font-medium ${isActive
+                  ? "text-brand"
+                  : "text-gray-700 hover:text-brand"
+                }`
+              }
+            >
+              Freelancers
+            </NavLink>
+
+
             {/* Dashboards */}
             {user?.role === "admin" && (
               <NavLink to="/dashboard" className={({ isActive }) =>

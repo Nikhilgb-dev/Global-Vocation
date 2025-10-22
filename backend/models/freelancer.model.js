@@ -28,9 +28,6 @@ const freelancerSchema = new mongoose.Schema(
 
     descriptionOfWork: {
       type: String,
-    //   required: true,
-    //   minlength: 100,
-    //   maxlength: 250,
     },
 
     aboutFreelancer: {
