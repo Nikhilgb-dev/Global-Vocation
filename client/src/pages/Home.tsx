@@ -46,7 +46,7 @@ export default function Home() {
           </div>
 
           {/* Trusted by logos */}
-          <div className="mt-14">
+          {/* <div className="mt-14">
             <p className="text-center text-gray-500">Trusted by teams at</p>
             <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-6 items-center">
               {[
@@ -67,7 +67,7 @@ export default function Home() {
                 </div>
               ))}
             </div>
-          </div>
+          </div> */}
         </div>
       </section>
 
