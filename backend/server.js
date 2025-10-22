@@ -11,6 +11,7 @@ import companyRoutes from "./routes/company.routes.js";
 import notificationRoutes from "./routes/notification.routes.js";
 import applicationRoutes from "./routes/application.routes.js";
 import feedbackRoutes from "./routes/feedback.routes.js";
+import freelanceRoutes from "./routes/freelancer.routes.js";
 
 dotenv.config();
 connectDB();
@@ -31,6 +32,7 @@ app.use("/api/notifications", notificationRoutes);
 app.use("/api/applications", applicationRoutes);
 app.use("/api/feedbacks", feedbackRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/freelancers", freelanceRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));

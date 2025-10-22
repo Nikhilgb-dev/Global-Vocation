@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import API from "../api/api";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import CreateCandidateModal from "../components/CreateCandidateModal";
 import EditJobModal from "../components/EditJobModal";
 import EditCommunityModal from "../components/EditCommunityModal";
@@ -8,6 +8,7 @@ import CreateCompanyModal from "../components/CreateCompanyModal";
 import CompanyDetailsModal from "../components/CompanyDetailsModal";
 import { motion, AnimatePresence } from "framer-motion";
 import ApplicantDetailsModal from "@/components/ApplicantDetailsModal";
+import FreelancerList from "./FreelancerList";
 
 import {
   Briefcase,
@@ -20,7 +21,8 @@ import {
   CheckCircle,
   XCircle,
   Shield,
-  ArrowRight
+  ArrowRight,
+  Star
 } from "lucide-react";
 import ApplicationStatusDropdown from "@/components/ApplicationStatusDropdown";
 import ViewResumeModal from "@/components/ViewResumeModal";
@@ -42,6 +44,9 @@ const Dashboard = () => {
   const [selectedCommunityId, setSelectedCommunityId] = useState<string | null>(null);
   const [showCreateCompanyModal, setShowCreateCompanyModal] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState<any | null>(null);
+
+  const navigate = useNavigate();
+
 
   // ===== Fetch Logged-in User =====
   useEffect(() => {
@@ -165,6 +170,7 @@ const Dashboard = () => {
       linkText: "Create new user"
     }
   ];
+
 
   // ===== Render =====
   return (
@@ -480,6 +486,32 @@ const Dashboard = () => {
                 </table>
               </div>
             </motion.div>
+
+            {/* ===== Freelancers Section ===== */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7 }}
+              className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mt-8"
+            >
+              <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="bg-purple-50 p-2.5 rounded-lg">
+                    <Star className="w-5 h-5 text-purple-600" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900">Manage Freelancers</h2>
+                    <p className="text-sm text-gray-500 mt-0.5">
+                      Add, edit and manage all freelancers
+                    </p>
+                  </div>
+                </div>
+                
+              </div>
+
+              <FreelancerList />
+            </motion.div>
+
 
             <motion.div
               initial={{ opacity: 0, y: 20 }}
