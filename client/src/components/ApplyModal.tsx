@@ -1,5 +1,5 @@
 import { toast } from "react-hot-toast";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import API from "../api/api";
 
 interface ApplyModalProps {
@@ -40,6 +40,56 @@ const ApplyModal: React.FC<ApplyModalProps> = ({ jobId, onClose, initialContact 
   const [experienceHistory, setExperienceHistory] = useState<ExperienceItem[]>([
     { companyName: "", jobTitle: "", startDate: "", endDate: "", currentlyWorking: false, description: "" },
   ]);
+  const [existingResume, setExistingResume] = useState<string | null>(null);
+
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await API.get("/jobs/my-profile");
+        if (res.data) {
+          const p = res.data;
+
+          setName(p.contact?.name || "");
+          setEmail(p.contact?.email || "");
+          setPhone(p.contact?.phone || "");
+          setAltPhone(p.contact?.altPhone || "");
+          setCoverLetter(p.coverLetter || "");
+          setResumeFile(null); // You can show note “Existing resume will be used”
+          setIsFresher(p.experience?.isFresher ?? true);
+          setYears(p.experience?.years ?? 0);
+          setExperienceHistory(
+            p.experience?.history?.map((h: any) => ({
+              ...h,
+              startDate: h.startDate ? h.startDate.slice(0, 10) : "",
+              endDate: h.endDate ? h.endDate.slice(0, 10) : "",
+            })) || []
+          );
+
+          setEducationHistory(
+            p.education?.map((e: any) => ({
+              ...e,
+              startDate: e.startDate ? e.startDate.slice(0, 10) : "",
+              endDate: e.endDate ? e.endDate.slice(0, 10) : "",
+            })) || []
+          );
+
+          setProjects(
+            p.projects?.map((proj: any) => ({
+              ...proj,
+              startDate: proj.startDate ? proj.startDate.slice(0, 10) : "",
+              endDate: proj.endDate ? proj.endDate.slice(0, 10) : "",
+            })) || []
+          );
+
+        }
+      } catch (err) {
+        console.error("No saved profile found for user.");
+      }
+    };
+
+    fetchProfile();
+  }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) setResumeFile(e.target.files[0]);
@@ -82,12 +132,13 @@ const ApplyModal: React.FC<ApplyModalProps> = ({ jobId, onClose, initialContact 
       return true;
     }
     if (step === 2) {
-      if (!resumeFile) {
+      if (!resumeFile && !existingResume) {
         toast.error("Please upload a resume.");
         return false;
       }
       return true;
     }
+
     if (step === 3) {
       if (!isFresher) {
         if (years === 0) {
@@ -144,7 +195,11 @@ const ApplyModal: React.FC<ApplyModalProps> = ({ jobId, onClose, initialContact 
     };
 
     const formData = new FormData();
-    formData.append("resume", resumeFile!);
+    // formData.append("resume", resumeFile!);
+    if (resumeFile) {
+      formData.append("resume", resumeFile);
+    }
+
     formData.append("coverLetter", coverLetter);
     formData.append("contact", JSON.stringify(contact));
     formData.append("experience", JSON.stringify(experienceData));
@@ -357,6 +412,22 @@ const ApplyModal: React.FC<ApplyModalProps> = ({ jobId, onClose, initialContact 
                         <svg className="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                         </svg>
+
+                        {!resumeFile && existingResume && (
+                          <p className="text-sm text-gray-600 mt-2">
+                            Using your previously uploaded resume.{" "}
+                            <a
+                              href={existingResume}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 underline"
+                            >
+                              View Resume
+                            </a>
+                          </p>
+                        )}
+
+
                         {resumeFile ? (
                           <p className="text-sm text-gray-700 font-medium">{resumeFile.name}</p>
                         ) : (

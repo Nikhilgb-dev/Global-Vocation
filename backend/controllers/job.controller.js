@@ -1,17 +1,31 @@
 import Job from "../models/job.model.js";
 import Application from "../models/application.model.js";
 import { uploadToCloudinary } from "../utils/cloudinary.util.js";
-
+import ApplicationProfile from "../models/applicationProfile.model.js";
 export const applyJob = async (req, res) => {
   try {
     const jobId = req.params.id;
     const { coverLetter, experience, contact } = req.body;
 
-    const resumeUrl = req.file
-      ? await uploadToCloudinary(req.file, "resumes")
-      : null;
-    if (!resumeUrl)
+    const existingProfile = await ApplicationProfile.findOne({
+      user: req.user._id,
+    });
+
+    // const resumeUrl = req.file
+    //   ? await uploadToCloudinary(req.file, "resumes")
+    //   : null;
+    // if (!resumeUrl)
+    //   return res.status(400).json({ message: "Resume file missing" })
+    // ;
+
+    let resumeUrl;
+    if (req.file) {
+      resumeUrl = await uploadToCloudinary(req.file, "resumes");
+    } else if (existingProfile?.resume) {
+      resumeUrl = existingProfile.resume;
+    } else {
       return res.status(400).json({ message: "Resume file missing" });
+    }
 
     // check job exists
     const job = await Job.findById(jobId);
@@ -73,8 +87,8 @@ export const applyJob = async (req, res) => {
           ? exp.history.map((item) => ({
               companyName: item.companyName || "",
               jobTitle: item.jobTitle || "",
-              startDate: item.startDate || null,
-              endDate: item.endDate || null,
+              startDate: item.startDate ? new Date(item.startDate) : null,
+              endDate: item.endDate ? new Date(item.endDate) : null,
               currentlyWorking: !!item.currentlyWorking,
               description: item.description || "",
             }))
@@ -124,6 +138,20 @@ export const applyJob = async (req, res) => {
       }
     }
 
+    await ApplicationProfile.findOneAndUpdate(
+      { user: req.user._id },
+      {
+        user: req.user._id,
+        contact: finalContact,
+        experience: experienceData,
+        education: educationData,
+        projects: projectData,
+        resume: resumeUrl,
+        coverLetter,
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+
     // create application
     const application = await Application.create({
       job: jobId,
@@ -157,6 +185,16 @@ export const applyJob = async (req, res) => {
   }
 };
 
+export const getMyApplicationProfile = async (req, res) => {
+  try {
+    const profile = await ApplicationProfile.findOne({ user: req.user._id });
+    if (!profile) return res.json(null);
+    res.json(profile);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 /**
  * CREATE JOB
  */
@@ -175,9 +213,7 @@ export const createJob = async (req, res) => {
 export const getJobs = async (req, res) => {
   try {
     const now = new Date();
-    let query = {};
-
-    query = {
+    let query = {
       $or: [{ isExpired: false }, { isExpired: { $exists: false } }],
       $or: [{ expiresAt: { $gte: now } }, { expiresAt: { $exists: false } }],
       status: "open",
@@ -196,9 +232,20 @@ export const getJobs = async (req, res) => {
       .populate("postedBy", "name email")
       .populate("company", "name logo");
 
-    console.log("#######jobs######", jobs);
+    let appliedJobs = [];
+    if (req.user && req.user._id) {
+      const applications = await Application.find({
+        user: req.user._id,
+      }).select("job");
+      appliedJobs = applications.map((a) => a.job.toString());
+    }
 
-    res.status(200).json(jobs);
+    const jobsWithFlag = jobs.map((job) => ({
+      ...job.toObject(),
+      hasApplied: appliedJobs.includes(job._id.toString()),
+    }));
+
+    res.status(200).json(jobsWithFlag);
   } catch (err) {
     console.error("❌ Error in getJobs:", err);
     res.status(500).json({ message: err.message });

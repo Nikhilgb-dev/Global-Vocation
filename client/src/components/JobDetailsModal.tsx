@@ -90,19 +90,6 @@ const JobDetailsModal: React.FC<Props> = ({ job, onClose }) => {
                             </p>
                         </div>
                     </div>
-
-                    {/* Action Button */}
-                    <div className="mt-6 flex gap-3">
-                        <button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl transition-colors duration-200 shadow-lg hover:shadow-xl">
-                            Apply Now
-                        </button>
-                        <button
-                            onClick={onClose}
-                            className="px-6 py-3 border-2 border-gray-300 hover:border-gray-400 text-gray-700 font-semibold rounded-xl transition-colors duration-200"
-                        >
-                            Close
-                        </button>
-                    </div>
                 </div>
             </div>
         </div>
