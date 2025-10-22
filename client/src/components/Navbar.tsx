@@ -1,6 +1,7 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import API from "../api/api";
+import logo from "../assets/logo.jpg";
 import { Bell } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -65,11 +66,14 @@ export default function Navbar() {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded bg-brand"></div>
-            <span className="text-xl font-bold">
-              Hirist<span className="text-brand">Tech</span>
-            </span>
+            <img
+              src={logo}
+              alt="Global Vocation Logo"
+              className="h-16 w-auto object-contain"
+            />
           </Link>
+
+
 
           {/* Nav Links */}
           <nav className="hidden md:flex items-center gap-1">
@@ -79,12 +83,12 @@ export default function Navbar() {
             }>
               Jobs
             </NavLink>
-            <NavLink to="/companies" className={({ isActive }) =>
+            {/* <NavLink to="/companies" className={({ isActive }) =>
               `px-3 py-2 rounded-md text-sm font-medium ${isActive ? "text-brand" : "text-gray-700 hover:text-brand"
               }`
             }>
               Companies
-            </NavLink>
+            </NavLink> */}
 
             <NavLink
               to="/freelancers"

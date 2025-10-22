@@ -2,8 +2,6 @@ import jwt from "jsonwebtoken";
 import User from "../models/user.model.js";
 
 export const protect = async (req, res, next) => {
-  console.log("🟢 Headers received:", req.headers.authorization);
-
   let token = req.headers.authorization?.split(" ")[1];
   if (!token) {
     console.log("❌ Token missing!");
@@ -18,7 +16,6 @@ export const protect = async (req, res, next) => {
       return res.status(404).json({ message: "User not found" });
     }
     req.user = user;
-    console.log("✅ Authenticated:", user.email);
     next();
   } catch (err) {
     console.log("❌ JWT error:", err.message);
