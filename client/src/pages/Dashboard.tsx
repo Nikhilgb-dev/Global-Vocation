@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import ApplicationStatusDropdown from "@/components/ApplicationStatusDropdown";
 import ViewResumeModal from "@/components/ViewResumeModal";
+import toast from "react-hot-toast";
 
 const Dashboard = () => {
   const [user, setUser] = useState<any>(null);
@@ -44,6 +45,16 @@ const Dashboard = () => {
   const [selectedCommunityId, setSelectedCommunityId] = useState<string | null>(null);
   const [showCreateCompanyModal, setShowCreateCompanyModal] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState<any | null>(null);
+
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({
+    title: "",
+    description: "",
+    location: "",
+    employmentType: "Full-time",
+    salary: "",
+    company: "",
+  });
 
   const navigate = useNavigate();
 
@@ -67,6 +78,15 @@ const Dashboard = () => {
     }
   };
 
+  const fetchJobs = async () => {
+    try {
+      const res = await API.get("/jobs");
+      setJobs(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
 
   useEffect(() => {
     if (user?.role === "admin") {
@@ -79,6 +99,34 @@ const Dashboard = () => {
       API.get("/posts").then((res) => setPosts(res.data));
     }
   }, [user]);
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  // ===== Submit New Job =====
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await API.post("/jobs", form);
+      toast.success("Job posted successfully!");
+      setShowForm(false);
+      setForm({
+        title: "",
+        description: "",
+        location: "",
+        employmentType: "Full-time",
+        salary: "",
+        company: "",
+      });
+      fetchJobs();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to post job");
+    }
+  };
+
 
   if (!user) return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center">
@@ -399,91 +447,290 @@ const Dashboard = () => {
               transition={{ delay: 0.4 }}
               className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden"
             >
-              <div className="px-6 py-5 border-b border-gray-100">
-                <div className="flex items-center gap-3">
-                  <div className="bg-blue-50 p-2.5 rounded-lg">
-                    <Briefcase className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-bold text-gray-900">Manage Jobs</h2>
-                    <p className="text-sm text-gray-500 mt-0.5">View and manage all job postings</p>
-                  </div>
-                </div>
-              </div>
+              <div className=" bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                  {/* Header */}
+                  <motion.div
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mb-8"
+                  >
+                    <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                      Welcome back, {user.name}! 👋
+                    </h1>
+                    <p className="text-gray-600">Here's an overview of your platform</p>
+                  </motion.div>
 
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50 border-b border-gray-100">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Title</th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Location</th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Type</th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Expires On</th>
-                      <th className="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    <AnimatePresence>
-                      {jobs.map((job, index) => (
-                        <motion.tr
-                          key={job._id}
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          transition={{ delay: index * 0.03 }}
-                          className="hover:bg-blue-50/30 transition-colors"
-                        >
-                          <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{job.title}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{job.location}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{job.employmentType}</td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20">
-                              {job.status}
-                            </span>
-                          </td>
-
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                            {(() => {
-                              if (!job.expiresAt) {
-                                // Fallback for older jobs (created before expiry feature)
-                                const fallback = new Date(job.createdAt);
-                                fallback.setDate(fallback.getDate() + 30);
-                                return fallback.toLocaleDateString();
-                              }
-                              const expDate = new Date(job.expiresAt);
-                              return isNaN(expDate.getTime()) ? "N/A" : expDate.toLocaleDateString();
-                            })()}
-                          </td>
-
-
-                          <td className="px-6 py-4 whitespace-nowrap text-right">
-                            <div className="flex items-center justify-end gap-1.5">
-                              <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => handleEditJob(job._id)}
-                                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                title="Edit"
-                              >
-                                <Edit2 className="w-4 h-4" />
-                              </motion.button>
-                              <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => handleDeleteJob(job._id)}
-                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                title="Delete"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </motion.button>
+                  {user.role === "admin" && (
+                    <>
+                      {/* ===== Manage Jobs ===== */}
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.4 }}
+                        className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden"
+                      >
+                        <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="bg-blue-50 p-2.5 rounded-lg">
+                              <Briefcase className="w-5 h-5 text-blue-600" />
                             </div>
-                          </td>
-                        </motion.tr>
-                      ))}
-                    </AnimatePresence>
-                  </tbody>
-                </table>
+                            <div>
+                              <h2 className="text-xl font-bold text-gray-900">Manage Jobs</h2>
+                              <p className="text-sm text-gray-500 mt-0.5">
+                                View, post, and manage all job openings
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* ✅ Updated Post Job Button */}
+                          <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => setShowForm(true)}
+                            className="flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-sm"
+                          >
+                            <Plus className="w-4 h-4" />
+                            Post New Job
+                          </motion.button>
+                        </div>
+
+                        <div className="overflow-x-auto">
+                          <table className="w-full">
+                            <thead className="bg-gray-50 border-b border-gray-100">
+                              <tr>
+                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                  Title
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                  Location
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                  Type
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                  Status
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                  Expires On
+                                </th>
+                                <th className="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                  Actions
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                              <AnimatePresence>
+                                {jobs.map((job, index) => (
+                                  <motion.tr
+                                    key={job._id}
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    transition={{ delay: index * 0.03 }}
+                                    className="hover:bg-blue-50/30 transition-colors"
+                                  >
+                                    <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">
+                                      {job.title}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                      {job.location || "N/A"}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                      {job.employmentType || "N/A"}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                      <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20">
+                                        {job.status || "open"}
+                                      </span>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                      {(() => {
+                                        if (!job.expiresAt) {
+                                          const fallback = new Date(job.createdAt);
+                                          fallback.setDate(fallback.getDate() + 30);
+                                          return fallback.toLocaleDateString();
+                                        }
+                                        const expDate = new Date(job.expiresAt);
+                                        return isNaN(expDate.getTime())
+                                          ? "N/A"
+                                          : expDate.toLocaleDateString();
+                                      })()}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                                      <div className="flex items-center justify-end gap-1.5">
+                                        <motion.button
+                                          whileHover={{ scale: 1.05 }}
+                                          whileTap={{ scale: 0.95 }}
+                                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                          title="Edit"
+                                          onClick={() => navigate("/dashboard/manage-jobs")}
+                                        >
+                                          <Edit2 className="w-4 h-4" />
+                                        </motion.button>
+                                        <motion.button
+                                          whileHover={{ scale: 1.05 }}
+                                          whileTap={{ scale: 0.95 }}
+                                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                          title="Delete"
+                                        >
+                                          <Trash2 className="w-4 h-4" />
+                                        </motion.button>
+                                      </div>
+                                    </td>
+                                  </motion.tr>
+                                ))}
+                              </AnimatePresence>
+                            </tbody>
+                          </table>
+                        </div>
+
+                        {jobs.length === 0 && (
+                          <div className="text-center py-6 text-gray-500 text-sm">
+                            No job postings found. Click “Post New Job” to create one.
+                          </div>
+                        )}
+                      </motion.div>
+                    </>
+                  )}
+                </div>
+
+                {/* 🧩 Post Job Modal */}
+                <AnimatePresence>
+                  {showForm && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+                    >
+                      <motion.div
+                        initial={{ scale: 0.9 }}
+                        animate={{ scale: 1 }}
+                        exit={{ scale: 0.9 }}
+                        className="bg-white rounded-2xl shadow-xl w-full max-w-2xl p-8 relative"
+                      >
+                        <button
+                          onClick={() => setShowForm(false)}
+                          className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+                        >
+                          ✕
+                        </button>
+
+                        <h3 className="text-2xl font-bold text-gray-800 mb-6">
+                          Post New Job
+                        </h3>
+
+                        <form onSubmit={handleSubmit} className="space-y-5">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Job Title
+                            </label>
+                            <input
+                              name="title"
+                              value={form.title}
+                              onChange={handleChange}
+                              className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500"
+                              required
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Company
+                            </label>
+                            <select
+                              name="company"
+                              value={form.company}
+                              onChange={handleChange}
+                              className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500"
+                              required
+                            >
+                              <option value="">Select Company</option>
+                              {companies.map((c) => (
+                                <option key={c._id} value={c._id}>
+                                  {c.name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Location
+                              </label>
+                              <input
+                                name="location"
+                                value={form.location}
+                                onChange={handleChange}
+                                className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Employment Type
+                              </label>
+                              <select
+                                name="employmentType"
+                                value={form.employmentType}
+                                onChange={handleChange}
+                                className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500"
+                              >
+                                <option>Full-time</option>
+                                <option>Part-time</option>
+                                <option>Contract</option>
+                                <option>Internship</option>
+                              </select>
+                            </div>
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Salary
+                            </label>
+                            <input
+                              name="salary"
+                              value={form.salary}
+                              onChange={handleChange}
+                              placeholder="e.g. $80,000 - $120,000"
+                              className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Description
+                            </label>
+                            <textarea
+                              name="description"
+                              value={form.description}
+                              onChange={handleChange}
+                              className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 resize-none"
+                              rows={5}
+                            />
+                          </div>
+
+                          <div className="flex justify-end gap-3 pt-4">
+                            <button
+                              type="button"
+                              onClick={() => setShowForm(false)}
+                              className="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              type="submit"
+                              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                            >
+                              Post Job
+                            </button>
+                          </div>
+                        </form>
+                      </motion.div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </motion.div>
 
@@ -506,7 +753,7 @@ const Dashboard = () => {
                     </p>
                   </div>
                 </div>
-                
+
               </div>
 
               <FreelancerList />
