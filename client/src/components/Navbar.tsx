@@ -15,39 +15,125 @@ export default function Navbar() {
   const userMenuRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
+  // 🔹 Fetch user details and notifications
   const fetchUser = async () => {
     const token = localStorage.getItem("token");
     if (token) {
       try {
         const res = await API.get("/users/me");
         setUser(res.data);
-        fetchNotifications();
+        await fetchNotifications();
+        if (res.data.role === "company_admin") {
+          fetchCompanyRemarks();
+        }
       } catch {
         setUser(null);
       }
     }
   };
 
+  // 🔹 Existing general notifications
+  // const fetchNotifications = async () => {
+  //   try {
+  //     const res = await API.get("/notifications");
+  //     setNotifications(res.data || []);
+  //   } catch (err) {
+  //     console.error("Failed to fetch notifications", err);
+  //   }
+  // };
+
   const fetchNotifications = async () => {
     try {
-      const res = await API.get("/notifications");
-      setNotifications(res.data || []);
+      // Base notifications (job-related)
+      const [notifRes, remarksRes] = await Promise.allSettled([
+        API.get("/notifications"),
+        user?.role === "company_admin" ? API.get("/companies/me/remarks") : null,
+      ]);
+
+      let baseNotifications = [];
+      if (notifRes.status === "fulfilled") {
+        baseNotifications = notifRes.value.data || [];
+      }
+
+      let remarkNotifications = [];
+      if (
+        user?.role === "company_admin" &&
+        remarksRes.status === "fulfilled" &&
+        remarksRes.value?.data?.remarksHistory
+      ) {
+        const remarks = remarksRes.value.data.remarksHistory;
+        remarkNotifications = remarks.map((r: any) => ({
+          _id: `remark-${r._id || Math.random().toString(36).substring(2)}`,
+          message: `📝 Admin Remark: ${r.text}`,
+          createdAt: r.date,
+          isRead: false,
+          type: "remark",
+        }));
+      }
+
+      // Merge both (remarks first, then others)
+      const merged = [...remarkNotifications, ...baseNotifications];
+
+      // Deduplicate by message text
+      const unique = Array.from(new Map(merged.map((n) => [n.message, n])).values());
+
+      // Sort newest first
+      unique.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+      setNotifications(unique);
     } catch (err) {
-      console.error("Failed to fetch notifications", err);
+      console.error("Failed to fetch notifications or remarks", err);
+    }
+  };
+
+
+  // 🔹 New: Fetch company remarks for company_admin users
+  const fetchCompanyRemarks = async () => {
+    try {
+      const res = await API.get("/companies/me/remarks");
+      const remarks = res.data.remarksHistory || [];
+
+      const formattedRemarks = remarks.map((r: any) => ({
+        _id: `remark-${r._id || Math.random().toString(36).substring(2)}`,
+        message: `📝 Admin Remark: ${r.text}`,
+        createdAt: r.date,
+        isRead: false,
+        type: "remark",
+      }));
+
+      // Merge remarks with other notifications and deduplicate
+      setNotifications((prev) => {
+        const merged = [...formattedRemarks, ...prev];
+        const unique = Array.from(new Map(merged.map((n) => [n.message, n])).values());
+        return unique.sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+      });
+    } catch (err) {
+      console.error("Failed to fetch company remarks", err);
     }
   };
 
   const markAsRead = async (id: string) => {
+    if (id.startsWith("remark-")) {
+      // remarks are read-only, don’t need API call
+      setNotifications((prev) =>
+        prev.map((n) => (n._id === id ? { ...n, isRead: true } : n))
+      );
+      return;
+    }
     await API.put(`/notifications/${id}/read`);
     fetchNotifications();
   };
 
+  // 🔹 Initial load
   useEffect(() => {
     fetchUser();
     window.addEventListener("auth-change", fetchUser);
     return () => window.removeEventListener("auth-change", fetchUser);
   }, []);
 
+  // 🔹 Click outside to close dropdowns
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
@@ -57,10 +143,17 @@ export default function Navbar() {
         setShowUserMenu(false);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // 🔹 Auto-refresh company remarks every 60s for live updates
+  useEffect(() => {
+    if (user?.role === "company_admin") {
+      const interval = setInterval(fetchCompanyRemarks, 60000);
+      return () => clearInterval(interval);
+    }
+  }, [user]);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -180,12 +273,18 @@ export default function Navbar() {
                                 key={n._id}
                                 whileHover={{ backgroundColor: "rgb(249, 250, 251)" }}
                                 onClick={() => markAsRead(n._id)}
-                                className={`p-4 border-b border-gray-100 cursor-pointer transition-colors ${n.isRead ? "bg-white" : "bg-blue-50/50"
+                                className={`p-4 border-b border-gray-100 cursor-pointer transition-colors ${n.isRead ? "bg-white" : n.type === "remark"
+                                  ? "bg-yellow-50/60"
+                                  : "bg-blue-50/50"
                                   }`}
                               >
                                 <div className="flex gap-3">
-                                  <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${n.isRead ? "bg-gray-300" : "bg-blue-500"
-                                    }`} />
+                                  <div
+                                    className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${n.isRead ? "bg-gray-300" : n.type === "remark"
+                                      ? "bg-yellow-400"
+                                      : "bg-blue-500"
+                                      }`}
+                                  />
                                   <div className="flex-1">
                                     <p className="text-sm text-gray-800 leading-relaxed">
                                       {n.message}
@@ -233,9 +332,7 @@ export default function Navbar() {
                         className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden"
                       >
                         <div className="p-3 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100">
-                          <p className="font-semibold text-gray-800 text-sm truncate">
-                            {user.name}
-                          </p>
+                          <p className="font-semibold text-gray-800 text-sm truncate">{user.name}</p>
                           <p className="text-xs text-gray-500 truncate">{user.email}</p>
                         </div>
                         <div className="py-2">

@@ -16,6 +16,11 @@ const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
 router.post("/", protect, upload.single("photo"), createFreelancer);
+router.post(
+  "/register",
+  upload.single("photo"),
+  createFreelancer
+);
 router.get("/", getAllFreelancers);
 router.post("/:id/apply", protect, upload.single("resume"), applyToFreelancer);
 router.get("/:id/applications", protect, getFreelancerApplications);

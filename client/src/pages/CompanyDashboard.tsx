@@ -17,10 +17,15 @@ type DashboardData = {
     pendingJobs: number;
 };
 
-const StatCard: React.FC<{ title: string; value: number }> = ({ title, value }) => (
-    <div className="bg-white border rounded p-4 shadow-sm">
-        <div className="text-sm text-gray-500">{title}</div>
-        <div className="text-2xl font-bold text-gray-800">{value}</div>
+const StatCard: React.FC<{ title: string; value: number }> = ({
+    title,
+    value,
+}) => (
+    <div className="bg-white border rounded-lg p-4 sm:p-5 shadow-sm flex flex-col justify-center text-center sm:text-left">
+        <div className="text-xs sm:text-sm text-gray-500">{title}</div>
+        <div className="text-xl sm:text-2xl font-semibold text-gray-800 mt-1">
+            {value}
+        </div>
     </div>
 );
 
@@ -32,6 +37,7 @@ const CompanyDashboard: React.FC = () => {
     const [resumeUrl, setResumeUrl] = useState<string | null>(null);
     const [selectedApplicant, setSelectedApplicant] = useState<any | null>(null);
     const [companyJobs, setCompanyJobs] = useState<any[]>([]);
+
     const fetchDashboard = async () => {
         const res = await API.get("/companies/me/dashboard");
         setData(res.data);
@@ -68,16 +74,23 @@ const CompanyDashboard: React.FC = () => {
         load();
     }, []);
 
-    if (loading) return <div className="text-gray-500">Loading dashboard...</div>;
-    if (!data) return <div className="text-red-500">Failed to load dashboard</div>;
+    if (loading)
+        return (
+            <div className="text-gray-500 text-center py-10">Loading dashboard...</div>
+        );
+    if (!data)
+        return (
+            <div className="text-red-500 text-center py-10">
+                Failed to load dashboard
+            </div>
+        );
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-8">
             {/* ====== STAT CARDS ====== */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6">
                 <StatCard title="Employees" value={data.employeesCount} />
                 <StatCard title="Jobs Posted" value={data.totalJobs} />
-                {/* <StatCard title="Open Jobs" value={data.openJobs} /> */}
                 <StatCard title="Applicants" value={data.totalApplicants} />
                 <StatCard title="Total Hired" value={data.totalHired} />
                 <StatCard title="Active Jobs" value={data.activeJobs} />
@@ -87,29 +100,39 @@ const CompanyDashboard: React.FC = () => {
 
             <FeedbackButton targetType="platform" />
 
-
             {/* ====== JOB LIST WITH EXPIRY BADGES ====== */}
-            <div className="bg-white border rounded-lg shadow-sm p-6 mt-8">
-                <h2 className="text-lg font-semibold mb-4">My Job Listings</h2>
+            <div className="bg-white border rounded-lg shadow-sm p-4 sm:p-6 mt-8">
+                <h2 className="text-lg sm:text-xl font-semibold mb-4 text-gray-800">
+                    My Job Listings
+                </h2>
 
                 {companyJobs.length === 0 ? (
-                    <p className="text-gray-500">No jobs found.</p>
+                    <p className="text-gray-500 text-center py-6">No jobs found.</p>
                 ) : (
                     <div className="overflow-x-auto">
-                        <table className="w-full text-sm border-t">
+                        <table className="w-full text-xs sm:text-sm border-t">
                             <thead className="bg-gray-50 text-gray-600 border-b">
                                 <tr>
-                                    <th className="p-2 text-left">Title</th>
-                                    <th className="p-2 text-left">Status</th>
-                                    <th className="p-2 text-left">Expires On</th>
-                                    <th className="p-2 text-left">Expiry State</th>
+                                    <th className="p-2 sm:p-3 text-left whitespace-nowrap">
+                                        Title
+                                    </th>
+                                    <th className="p-2 sm:p-3 text-left whitespace-nowrap">
+                                        Status
+                                    </th>
+                                    <th className="p-2 sm:p-3 text-left whitespace-nowrap">
+                                        Expires On
+                                    </th>
+                                    <th className="p-2 sm:p-3 text-left whitespace-nowrap">
+                                        Expiry State
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {companyJobs.map((job) => {
                                     const expDate = new Date(job.expiresAt);
                                     const daysLeft = Math.ceil(
-                                        (expDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+                                        (expDate.getTime() - Date.now()) /
+                                        (1000 * 60 * 60 * 24)
                                     );
 
                                     let badgeClass =
@@ -117,21 +140,30 @@ const CompanyDashboard: React.FC = () => {
                                     let badgeText = "Active";
 
                                     if (daysLeft <= 0 || job.isExpired) {
-                                        badgeClass = "bg-red-50 text-red-700 ring-1 ring-red-600/20";
+                                        badgeClass =
+                                            "bg-red-50 text-red-700 ring-1 ring-red-600/20";
                                         badgeText = "Expired";
                                     } else if (daysLeft <= 7) {
-                                        badgeClass = "bg-yellow-50 text-yellow-700 ring-1 ring-yellow-600/20";
+                                        badgeClass =
+                                            "bg-yellow-50 text-yellow-700 ring-1 ring-yellow-600/20";
                                         badgeText = `Expiring Soon (${daysLeft}d)`;
                                     }
 
                                     return (
-                                        <tr key={job._id} className="border-b hover:bg-gray-50">
-                                            <td className="p-2 font-medium text-gray-900">{job.title}</td>
-                                            <td className="p-2 capitalize text-gray-600">{job.status}</td>
-                                            <td className="p-2 text-gray-600">
+                                        <tr
+                                            key={job._id}
+                                            className="border-b hover:bg-gray-50 transition"
+                                        >
+                                            <td className="p-2 sm:p-3 font-medium text-gray-900 whitespace-nowrap">
+                                                {job.title}
+                                            </td>
+                                            <td className="p-2 sm:p-3 capitalize text-gray-600">
+                                                {job.status}
+                                            </td>
+                                            <td className="p-2 sm:p-3 text-gray-600 whitespace-nowrap">
                                                 {new Date(job.expiresAt).toLocaleDateString()}
                                             </td>
-                                            <td className="p-2">
+                                            <td className="p-2 sm:p-3">
                                                 <span
                                                     className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${badgeClass}`}
                                                 >
@@ -147,66 +179,75 @@ const CompanyDashboard: React.FC = () => {
                 )}
             </div>
 
-
             {/* ====== APPLICANTS TABLE ====== */}
-            <div className="bg-white border rounded-lg shadow-sm p-6">
-                <h2 className="text-lg font-semibold mb-4">Recent Applicants</h2>
+            <div className="bg-white border rounded-lg shadow-sm p-4 sm:p-6">
+                <h2 className="text-lg sm:text-xl font-semibold mb-4 text-gray-800">
+                    Recent Applicants
+                </h2>
 
                 {applicants.length === 0 ? (
-                    <div className="text-gray-500">No applicants yet.</div>
+                    <div className="text-gray-500 text-center py-6">
+                        No applicants yet.
+                    </div>
                 ) : (
                     <div className="overflow-x-auto">
-                        <table className="w-full text-sm border-t">
+                        <table className="w-full text-xs sm:text-sm border-t">
                             <thead className="bg-gray-50 text-gray-600 border-b">
                                 <tr>
-                                    <th className="p-2 text-left">Candidate</th>
-                                    <th className="p-2 text-left">Job Title</th>
-                                    <th className="p-2 text-left">Status</th>
-                                    <th className="p-2 text-left">Applied On</th>
-                                    <th className="p-2 text-left">Resume</th>
-                                    <th className="p-2 text-left">Details</th>
+                                    <th className="p-2 sm:p-3 text-left">Candidate</th>
+                                    <th className="p-2 sm:p-3 text-left">Job Title</th>
+                                    <th className="p-2 sm:p-3 text-left">Status</th>
+                                    <th className="p-2 sm:p-3 text-left">Applied On</th>
+                                    <th className="p-2 sm:p-3 text-left">Resume</th>
+                                    <th className="p-2 sm:p-3 text-left">Details</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {applicants.map((a) => (
-                                    <tr key={a._id} className="border-b hover:bg-gray-50">
-                                        <td className="p-2 flex items-center gap-3">
+                                    <tr
+                                        key={a._id}
+                                        className="border-b hover:bg-gray-50 transition"
+                                    >
+                                        <td className="p-2 sm:p-3 flex items-center gap-3 min-w-[180px]">
                                             {a.user?.profilePhoto ? (
                                                 <img
                                                     src={a.user.profilePhoto}
                                                     alt={a.user.name}
-                                                    className="w-9 h-9 rounded-full object-cover ring-1 ring-gray-200"
+                                                    className="w-8 h-8 sm:w-9 sm:h-9 rounded-full object-cover ring-1 ring-gray-200"
                                                 />
                                             ) : (
-                                                <div className="w-9 h-9 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-semibold">
+                                                <div className="w-8 h-8 sm:w-9 sm:h-9 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-semibold">
                                                     {a.user?.name?.charAt(0)}
                                                 </div>
                                             )}
                                             <div>
-                                                <div className="font-medium text-gray-900">{a.user?.name}</div>
-                                                <div className="text-xs text-gray-500">{a.user?.email}</div>
+                                                <div className="font-medium text-gray-900 text-sm">
+                                                    {a.user?.name}
+                                                </div>
+                                                <div className="text-xs text-gray-500">
+                                                    {a.user?.email}
+                                                </div>
                                             </div>
                                         </td>
-                                        <td className="p-2">{a.job?.title}</td>
-                                        <td className="p-2">
+                                        <td className="p-2 sm:p-3">{a.job?.title}</td>
+                                        <td className="p-2 sm:p-3">
                                             <ApplicationStatusDropdown
                                                 id={a._id}
                                                 currentStatus={a.status}
                                                 onUpdated={fetchApplicants}
                                             />
                                         </td>
-                                        <td className="p-2 text-gray-500">
+                                        <td className="p-2 sm:p-3 text-gray-500">
                                             {new Date(a.createdAt).toLocaleDateString()}
                                         </td>
                                         <td
-                                            className="p-2 text-blue-600 hover:underline cursor-pointer"
+                                            className="p-2 sm:p-3 text-blue-600 hover:underline cursor-pointer"
                                             onClick={() => setResumeUrl(a.resume)}
                                         >
                                             View Resume
                                         </td>
-
                                         <td
-                                            className="p-2 text-blue-600 hover:underline cursor-pointer"
+                                            className="p-2 sm:p-3 text-blue-600 hover:underline cursor-pointer"
                                             onClick={() => setSelectedApplicant(a)}
                                         >
                                             View Details
@@ -218,8 +259,6 @@ const CompanyDashboard: React.FC = () => {
                                                 onClose={() => setSelectedApplicant(null)}
                                             />
                                         )}
-
-
                                     </tr>
                                 ))}
                             </tbody>
@@ -229,7 +268,10 @@ const CompanyDashboard: React.FC = () => {
             </div>
 
             {resumeUrl && (
-                <ViewResumeModal resumeUrl={resumeUrl} onClose={() => setResumeUrl(null)} />
+                <ViewResumeModal
+                    resumeUrl={resumeUrl}
+                    onClose={() => setResumeUrl(null)}
+                />
             )}
         </div>
     );

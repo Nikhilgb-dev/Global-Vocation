@@ -22,6 +22,14 @@ const companySchema = new mongoose.Schema(
     },
     verified: { type: Boolean, default: false },
     admins: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    remarks: { type: String, default: "" },
+    remarksHistory: [
+      {
+        text: String,
+        addedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        date: { type: Date, default: Date.now },
+      },
+    ],
   },
   { timestamps: true }
 );

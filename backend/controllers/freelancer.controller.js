@@ -16,7 +16,7 @@ export const createFreelancer = async (req, res) => {
       pricing,
     } = req.body;
 
-    // ✅ Parse preferences properly
+    // ✅ Parse safely
     const parsedPreferences = Array.isArray(preferences)
       ? preferences
       : JSON.parse(preferences || "[]");
@@ -26,20 +26,27 @@ export const createFreelancer = async (req, res) => {
       photoUrl = await uploadToCloudinary(req.file, "freelancers");
     }
 
-    const freelancer = await Freelancer.create({
+    const freelancerData = {
       name,
       qualification,
       contact,
       email,
       location,
-      preferences: parsedPreferences, // ✅ FIXED HERE
+      preferences: parsedPreferences,
       descriptionOfWork,
       aboutFreelancer,
       photo: photoUrl,
       services: JSON.parse(services || "[]"),
-      pricing: JSON.parse(pricing),
-      createdBy: req.user._id,
-    });
+      pricing: JSON.parse(pricing || "{}"),
+      isActive: true,
+    };
+
+    // ✅ If logged in → mark createdBy
+    if (req.user) {
+      freelancerData.createdBy = req.user._id;
+    }
+
+    const freelancer = await Freelancer.create(freelancerData);
 
     res
       .status(201)

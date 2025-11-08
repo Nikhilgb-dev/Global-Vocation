@@ -246,12 +246,19 @@ const Signup = () => {
           </Link>
         </p>
 
-        <p className="mt-3 text-sm text-center text-gray-600">
+        {/* <p className="mt-3 text-sm text-center text-gray-600">
           Are you a company?{" "}
           <Link to="/register-company" className="text-green-600 font-medium hover:underline">
             Register your company →
           </Link>
         </p>
+
+        <p className="mt-3 text-sm text-center text-gray-600">
+          Are you a freelancer?{" "}
+          <Link to="/freelancers/register" className="text-green-600 font-medium hover:underline">
+            Register as freelancer →
+          </Link>
+        </p> */}
       </form>
     </div>
   );

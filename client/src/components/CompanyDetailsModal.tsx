@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import API from "../api/api";
 import { toast } from "react-hot-toast";
 
@@ -24,6 +24,8 @@ const CompanyDetailsModal: React.FC<Props> = ({ company, onClose, onRefresh, isA
             toast.error(err.response?.data?.message || "Failed to update status");
         }
     };
+
+    const [remark, setRemark] = useState("");
 
     const handleDelete = async () => {
         if (window.confirm("Are you sure you want to delete this company?")) {
@@ -155,6 +157,29 @@ const CompanyDetailsModal: React.FC<Props> = ({ company, onClose, onRefresh, isA
                     ) : (
                         <p className="text-gray-600 text-sm">No documents uploaded.</p>
                     )}
+                </div>
+
+                <div className="mt-6 border-t pt-4">
+                    <h4 className="text-lg font-semibold text-gray-800 mb-2">Remarks</h4>
+                    <textarea
+                        value={remark}
+                        onChange={(e) => setRemark(e.target.value)}
+                        placeholder="Add any missing information notes..."
+                        className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 resize-none"
+                        rows={3}
+                    />
+                    <div className="flex justify-end mt-3">
+                        <button
+                            onClick={async () => {
+                                await API.put(`/companies/${company._id}/remark`, { remark });
+                                toast.success("Remark added successfully");
+                                onRefresh();
+                            }}
+                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                        >
+                            Submit Remark
+                        </button>
+                    </div>
                 </div>
 
                 {/* Admin Controls */}

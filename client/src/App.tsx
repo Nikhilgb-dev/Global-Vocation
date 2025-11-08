@@ -38,6 +38,8 @@ import CompanyFeedbackPage from "./pages/CompanyFeedbackPage";
 import Settings from "./pages/Settings";
 import FreelancerList from "./pages/FreelancerList";
 import Freelancers from "./pages/Freelancers";
+import AddFreelancer from "./pages/AddFreelancer";
+import FreelancerRegister from "./pages/FreelancerRegister";
 
 export default function App() {
   return (
@@ -124,6 +126,7 @@ export default function App() {
               <Route path="/admin/jobs" element={<ManageJobsPage />} />
               <Route path="/admin/freelancers" element={<FreelancerList />} />
               <Route path="/freelancers" element={<Freelancers />} />
+              <Route path="/freelancers/register" element={<FreelancerRegister />} />
             </Routes>
           </main>
 

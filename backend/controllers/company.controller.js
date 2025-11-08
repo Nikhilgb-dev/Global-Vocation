@@ -684,3 +684,42 @@ export const getCompanyDashboard = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+export const addCompanyRemark = async (req, res) => {
+  try {
+    const { remark } = req.body;
+    const company = await Company.findById(req.params.id);
+    if (!company) return res.status(404).json({ message: "Company not found" });
+
+    company.remarks = remark;
+    company.remarksHistory.push({
+      text: remark,
+      addedBy: req.user._id,
+    });
+
+    await company.save();
+    res.json({ message: "Remark added successfully", company });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const companyNotifications = async (req, res) => {
+  try {
+    const company = await Company.findOne({
+      $or: [{ _id: req.user.company }, { admins: req.user._id }],
+    }).select("remarks remarksHistory");
+
+    if (!company) return res.status(404).json({ message: "Company not found" });
+    const sorted = (company.remarksHistory || []).sort(
+      (a, b) => new Date(b.date) - new Date(a.date)
+    );
+
+    res.json({
+      currentRemark: company.remarks,
+      remarksHistory: sorted,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};

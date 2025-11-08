@@ -10,7 +10,12 @@ interface Service {
     otherDetails: string;
 }
 
-const AddFreelancer: React.FC<{ onAdded?: () => void }> = ({ onAdded }) => {
+interface AddFreelancerProps {
+    onAdded?: () => void;
+    isPublic?: boolean;
+}
+
+const AddFreelancer: React.FC<AddFreelancerProps> = ({ onAdded, isPublic = false }) => {
     const [name, setName] = useState("");
     const [qualification, setQualification] = useState("");
     const [contact, setContact] = useState("");
@@ -77,9 +82,12 @@ const AddFreelancer: React.FC<{ onAdded?: () => void }> = ({ onAdded }) => {
             formData.append("services", JSON.stringify(services));
             if (photo) formData.append("photo", photo);
 
-            await API.post("/freelancers", formData, {
-                headers: { "Content-Type": "multipart/form-data" },
-            });
+            await API.post(
+                isPublic ? "/freelancers/register" : "/freelancers",
+                formData,
+                { headers: { "Content-Type": "multipart/form-data" } }
+            );
+
 
             toast.success("Freelancer added successfully!");
             onAdded?.();

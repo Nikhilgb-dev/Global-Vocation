@@ -9,6 +9,7 @@ interface Props {
 
 const CompanyForm: React.FC<Props> = ({ mode, onSuccess }) => {
     const [step, setStep] = useState(1);
+    const [loading, setLoading] = useState(false);
 
     const [form, setForm] = useState({
         name: "",
@@ -29,11 +30,13 @@ const CompanyForm: React.FC<Props> = ({ mode, onSuccess }) => {
 
     const [logo, setLogo] = useState<File | null>(null);
     const [signature, setSignature] = useState<File | null>(null);
-    const [verificationDocs, setVerificationDocs] = useState<FileList | null>(null);
-    const [loading, setLoading] = useState(false);
+    const [verificationDocs, setVerificationDocs] = useState<FileList | null>(
+        null
+    );
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
-        setForm({ ...form, [e.target.name]: e.target.value });
+    const handleChange = (
+        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    ) => setForm({ ...form, [e.target.name]: e.target.value });
 
     const handleNext = () => setStep((prev) => Math.min(prev + 1, 4));
     const handleBack = () => setStep((prev) => Math.max(prev - 1, 1));
@@ -43,8 +46,9 @@ const CompanyForm: React.FC<Props> = ({ mode, onSuccess }) => {
         try {
             setLoading(true);
             const formData = new FormData();
-
-            Object.entries(form).forEach(([key, value]) => formData.append(key, value));
+            Object.entries(form).forEach(([key, value]) =>
+                formData.append(key, value)
+            );
 
             if (logo) formData.append("logo", logo);
             if (signature) formData.append("authorizedSignatory[signature]", signature);
@@ -64,11 +68,7 @@ const CompanyForm: React.FC<Props> = ({ mode, onSuccess }) => {
 
             toast.success("✅ Company registered successfully!");
 
-            if (onSuccess) {
-                setTimeout(() => {
-                    onSuccess();
-                }, 800);
-            }
+            if (onSuccess) setTimeout(() => onSuccess(), 800);
 
             setForm({
                 name: "",
@@ -76,13 +76,13 @@ const CompanyForm: React.FC<Props> = ({ mode, onSuccess }) => {
                 industry: "",
                 size: "",
                 type: "",
+                salary: "",
                 address: "",
                 tagline: "",
                 description: "",
                 email: "",
-                salary: "",
-                password: "",
                 contactNumber: "",
+                password: "",
                 authorizedSignatoryName: "",
                 authorizedSignatoryDesignation: "",
             });
@@ -102,11 +102,11 @@ const CompanyForm: React.FC<Props> = ({ mode, onSuccess }) => {
     const steps = ["Basic Info", "Details", "Signatory", "Uploads"];
 
     return (
-        <div className="max-w-3xl mx-auto bg-white rounded-2xl p-8 shadow-xl border border-gray-100">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-2">
+        <div className="max-w-4xl w-full mx-auto bg-white rounded-2xl p-6 sm:p-10 shadow-lg border border-gray-100">
+            <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-1 text-center sm:text-left">
                 Company Registration
             </h2>
-            <p className="text-sm text-gray-600 mb-6">
+            <p className="text-xs sm:text-sm text-gray-600 mb-6 text-center sm:text-left">
                 Step {step} of 4 — {steps[step - 1]}
             </p>
 
@@ -115,7 +115,7 @@ const CompanyForm: React.FC<Props> = ({ mode, onSuccess }) => {
                 {steps.map((_, i) => (
                     <div
                         key={i}
-                        className={`flex-1 h-2 rounded-full mx-1 transition-all ${i < step ? "bg-green-600" : "bg-gray-200"
+                        className={`flex-1 h-2 rounded-full mx-0.5 sm:mx-1 transition-all ${i < step ? "bg-green-600" : "bg-gray-200"
                             }`}
                     />
                 ))}
@@ -124,15 +124,15 @@ const CompanyForm: React.FC<Props> = ({ mode, onSuccess }) => {
             <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Step 1 — Basic Info */}
                 {step === 1 && (
-                    <div className="grid gap-4 animate-fadeIn">
-                        <div className="grid sm:grid-cols-2 gap-3">
+                    <div className="grid gap-4 sm:gap-5 animate-fadeIn">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <input
                                 name="name"
                                 value={form.name}
                                 onChange={handleChange}
                                 placeholder="Company Name"
                                 required
-                                className="border rounded-md px-3 py-2 text-sm"
+                                className="border rounded-md px-3 py-2 text-sm sm:text-base w-full"
                             />
                             <input
                                 name="domain"
@@ -140,24 +140,24 @@ const CompanyForm: React.FC<Props> = ({ mode, onSuccess }) => {
                                 onChange={handleChange}
                                 placeholder="Company Domain / Website"
                                 required
-                                className="border rounded-md px-3 py-2 text-sm"
+                                className="border rounded-md px-3 py-2 text-sm sm:text-base w-full"
                             />
                         </div>
 
-                        <div className="grid sm:grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <input
                                 name="industry"
                                 value={form.industry}
                                 onChange={handleChange}
                                 placeholder="Industry Type"
-                                className="border rounded-md px-3 py-2 text-sm"
+                                className="border rounded-md px-3 py-2 text-sm sm:text-base w-full"
                             />
                             <input
                                 name="size"
                                 value={form.size}
                                 onChange={handleChange}
                                 placeholder="Company Size (e.g., 51–200)"
-                                className="border rounded-md px-3 py-2 text-sm"
+                                className="border rounded-md px-3 py-2 text-sm sm:text-base w-full"
                             />
                         </div>
 
@@ -166,43 +166,43 @@ const CompanyForm: React.FC<Props> = ({ mode, onSuccess }) => {
                             value={form.type}
                             onChange={handleChange}
                             placeholder="Company Type (Private / Public / Nonprofit)"
-                            className="border rounded-md px-3 py-2 text-sm"
+                            className="border rounded-md px-3 py-2 text-sm sm:text-base w-full"
                         />
                     </div>
                 )}
 
                 {/* Step 2 — Details */}
                 {step === 2 && (
-                    <div className="grid gap-4 animate-fadeIn">
+                    <div className="grid gap-4 sm:gap-5 animate-fadeIn">
                         <textarea
                             name="address"
                             value={form.address}
                             onChange={handleChange}
                             placeholder="Registered Office Address"
-                            className="border rounded-md px-3 py-2 text-sm"
+                            className="border rounded-md px-3 py-2 text-sm sm:text-base w-full"
                         />
                         <textarea
                             name="description"
                             value={form.description}
                             onChange={handleChange}
                             placeholder="Company Description"
-                            className="border rounded-md px-3 py-2 text-sm"
+                            className="border rounded-md px-3 py-2 text-sm sm:text-base w-full"
                         />
                         <input
                             name="tagline"
                             value={form.tagline}
                             onChange={handleChange}
                             placeholder="Company Tagline"
-                            className="border rounded-md px-3 py-2 text-sm"
+                            className="border rounded-md px-3 py-2 text-sm sm:text-base w-full"
                         />
-                        <div className="grid sm:grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <input
                                 name="email"
                                 value={form.email}
                                 onChange={handleChange}
                                 placeholder="Official Business Email"
                                 required
-                                className="border rounded-md px-3 py-2 text-sm"
+                                className="border rounded-md px-3 py-2 text-sm sm:text-base w-full"
                             />
                             <input
                                 type="password"
@@ -211,48 +211,50 @@ const CompanyForm: React.FC<Props> = ({ mode, onSuccess }) => {
                                 onChange={handleChange}
                                 placeholder="Set Company Account Password"
                                 required
-                                className="border rounded-md px-3 py-2 text-sm"
-                            />
-                            <input
-                                name="contactNumber"
-                                value={form.contactNumber}
-                                onChange={handleChange}
-                                placeholder="Contact Number"
-                                className="border rounded-md px-3 py-2 text-sm"
+                                className="border rounded-md px-3 py-2 text-sm sm:text-base w-full"
                             />
                         </div>
+                        <input
+                            name="contactNumber"
+                            value={form.contactNumber}
+                            onChange={handleChange}
+                            placeholder="Contact Number"
+                            className="border rounded-md px-3 py-2 text-sm sm:text-base w-full"
+                        />
                     </div>
                 )}
 
                 {/* Step 3 — Authorized Signatory */}
                 {step === 3 && (
-                    <div className="grid gap-4 animate-fadeIn">
-                        <h3 className="font-semibold text-gray-800">Authorized Signatory</h3>
-                        <div className="grid sm:grid-cols-2 gap-3">
+                    <div className="grid gap-4 sm:gap-5 animate-fadeIn">
+                        <h3 className="font-semibold text-gray-800 text-sm sm:text-base">
+                            Authorized Signatory
+                        </h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <input
                                 name="authorizedSignatoryName"
                                 value={form.authorizedSignatoryName}
                                 onChange={handleChange}
                                 placeholder="Name"
-                                className="border rounded-md px-3 py-2 text-sm"
+                                className="border rounded-md px-3 py-2 text-sm sm:text-base w-full"
                             />
                             <input
                                 name="authorizedSignatoryDesignation"
                                 value={form.authorizedSignatoryDesignation}
                                 onChange={handleChange}
                                 placeholder="Designation"
-                                className="border rounded-md px-3 py-2 text-sm"
+                                className="border rounded-md px-3 py-2 text-sm sm:text-base w-full"
                             />
                         </div>
                         <div>
-                            <label className="text-sm text-gray-700">
+                            <label className="block text-sm text-gray-700 mb-1">
                                 Digital Signature (optional)
                             </label>
                             <input
                                 type="file"
                                 accept="image/*"
                                 onChange={(e) => setSignature(e.target.files?.[0] || null)}
-                                className="text-sm"
+                                className="text-sm sm:text-base w-full"
                             />
                         </div>
                     </div>
@@ -260,26 +262,28 @@ const CompanyForm: React.FC<Props> = ({ mode, onSuccess }) => {
 
                 {/* Step 4 — Uploads */}
                 {step === 4 && (
-                    <div className="grid gap-4 animate-fadeIn">
-                        <div className="grid sm:grid-cols-2 gap-3">
+                    <div className="grid gap-4 sm:gap-5 animate-fadeIn">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
-                                <label className="text-sm text-gray-700">Company Logo</label>
+                                <label className="block text-sm text-gray-700 mb-1">
+                                    Company Logo
+                                </label>
                                 <input
                                     type="file"
                                     accept="image/*"
                                     onChange={(e) => setLogo(e.target.files?.[0] || null)}
-                                    className="text-sm"
+                                    className="text-sm sm:text-base w-full"
                                 />
                             </div>
                             <div>
-                                <label className="text-sm text-gray-700">
+                                <label className="block text-sm text-gray-700 mb-1">
                                     Verification Documents
                                 </label>
                                 <input
                                     type="file"
                                     multiple
                                     onChange={(e) => setVerificationDocs(e.target.files)}
-                                    className="text-sm"
+                                    className="text-sm sm:text-base w-full"
                                 />
                             </div>
                         </div>
@@ -287,12 +291,12 @@ const CompanyForm: React.FC<Props> = ({ mode, onSuccess }) => {
                 )}
 
                 {/* Buttons */}
-                <div className="flex justify-between pt-4">
+                <div className="flex flex-col sm:flex-row justify-between gap-3 pt-6">
                     {step > 1 && (
                         <button
                             type="button"
                             onClick={handleBack}
-                            className="px-5 py-2 rounded-md bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm font-medium"
+                            className="w-full sm:w-auto px-5 py-2 rounded-md bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm sm:text-base font-medium"
                         >
                             Back
                         </button>
@@ -301,7 +305,7 @@ const CompanyForm: React.FC<Props> = ({ mode, onSuccess }) => {
                         <button
                             type="button"
                             onClick={handleNext}
-                            className="ml-auto px-5 py-2 rounded-md bg-green-600 hover:bg-green-700 text-white text-sm font-medium"
+                            className="w-full sm:w-auto ml-auto px-5 py-2 rounded-md bg-green-600 hover:bg-green-700 text-white text-sm sm:text-base font-medium"
                         >
                             Next
                         </button>
@@ -310,7 +314,7 @@ const CompanyForm: React.FC<Props> = ({ mode, onSuccess }) => {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="ml-auto px-6 py-2 rounded-md bg-green-600 text-white hover:bg-green-700 font-medium disabled:opacity-60"
+                            className="w-full sm:w-auto ml-auto px-6 py-2 rounded-md bg-green-600 text-white hover:bg-green-700 font-medium text-sm sm:text-base disabled:opacity-60"
                         >
                             {loading ? "Submitting..." : "Submit Registration"}
                         </button>
