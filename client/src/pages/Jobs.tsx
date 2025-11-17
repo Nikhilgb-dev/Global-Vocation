@@ -40,7 +40,7 @@ const Jobs = () => {
       <div className="text-zinc-900 py-10 px-4 sm:px-6 lg:px-8 text-center sm:text-left">
         <div className="max-w-5xl mx-auto">
           <h1 className="text-3xl sm:text-4xl font-bold mb-3">
-            Discover Your Next Career
+            Discover Your Career
           </h1>
           <p className="text-zinc-800 text-base sm:text-lg">
             Explore opportunities that match your skills and passion
@@ -237,6 +237,28 @@ const Jobs = () => {
                             day: "numeric",
                             year: "numeric",
                           })}
+                        </span>
+                        <span>
+                          Expires{" "}
+                          {(() => {
+                            if (!job.expiresAt) {
+                              const fallback = new Date(job.createdAt);
+                              fallback.setDate(fallback.getDate() + 30);
+                              return fallback.toLocaleDateString("en-US", {
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
+                              });
+                            }
+                            const expDate = new Date(job.expiresAt);
+                            return isNaN(expDate.getTime())
+                              ? "N/A"
+                              : expDate.toLocaleDateString("en-US", {
+                                  month: "short",
+                                  day: "numeric",
+                                  year: "numeric",
+                                });
+                          })()}
                         </span>
                         {job.applicantsCount !== undefined && (
                           <span>

@@ -5,10 +5,11 @@ const jobSchema = new mongoose.Schema(
     title: String,
     description: String,
     location: String,
-    salary: { type: String },
+    minSalary: { type: Number },
+    maxSalary: { type: Number },
     employmentType: {
       type: String,
-      enum: ["Full-time", "Part-time", "Contract", "Internship"],
+      enum: ["Full-time", "Part-time", "Contract", "Internship", "Remote", "Hybrid", "Work from home"],
     },
     postedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     company: { type: mongoose.Schema.Types.ObjectId, ref: "Company" },

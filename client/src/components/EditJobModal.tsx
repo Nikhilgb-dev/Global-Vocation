@@ -9,7 +9,7 @@ interface EditJobModalProps {
 }
 
 const EditJobModal: React.FC<EditJobModalProps> = ({ jobId, onClose, onJobUpdated }) => {
-  const [form, setForm] = useState({ title: "", description: "", location: "", salary: "", employmentType: "Full-time" });
+  const [form, setForm] = useState({ title: "", description: "", location: "", minSalary: undefined as number | undefined, maxSalary: undefined as number | undefined, employmentType: "Full-time", expiresAt: "" });
 
   useEffect(() => {
     API.get(`/jobs/${jobId}`).then((res) => {
@@ -39,14 +39,21 @@ const EditJobModal: React.FC<EditJobModalProps> = ({ jobId, onClose, onJobUpdate
         <form onSubmit={handleSubmit}>
           <input type="text" name="title" placeholder="Title" value={form.title} onChange={handleChange} className="w-full mb-2 p-2 border" />
           <input type="text" name="location" placeholder="Location" value={form.location} onChange={handleChange} className="w-full mb-2 p-2 border" />
-          <input type="text" name="salary" placeholder="Salary" value={form.salary} onChange={handleChange} className="w-full mb-2 p-2 border" />
+          <div className="grid grid-cols-2 gap-2 mb-2">
+            <input type="number" name="minSalary" placeholder="Min Salary (LPA)" value={form.minSalary || ""} onChange={(e) => setForm({ ...form, minSalary: e.target.value ? parseFloat(e.target.value) : undefined })} className="w-full p-2 border" />
+            <input type="number" name="maxSalary" placeholder="Max Salary (LPA)" value={form.maxSalary || ""} onChange={(e) => setForm({ ...form, maxSalary: e.target.value ? parseFloat(e.target.value) : undefined })} className="w-full p-2 border" />
+          </div>
           <select name="employmentType" value={form.employmentType} onChange={handleChange} className="w-full mb-2 p-2 border">
             <option>Full-time</option>
             <option>Part-time</option>
             <option>Contract</option>
             <option>Internship</option>
+            <option>Remote</option>
+            <option>Hybrid</option>
+            <option>Work from home</option>
           </select>
           <textarea name="description" placeholder="Job Description" value={form.description} onChange={handleChange} className="w-full mb-2 p-2 border" />
+          <input type="date" name="expiresAt" placeholder="Expiry Date" value={form.expiresAt ? new Date(form.expiresAt).toISOString().split('T')[0] : ""} onChange={handleChange} className="w-full mb-2 p-2 border" />
           <div className="flex justify-end gap-4">
             <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">
               Cancel

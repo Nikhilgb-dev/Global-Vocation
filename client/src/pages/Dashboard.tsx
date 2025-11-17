@@ -52,7 +52,8 @@ const Dashboard = () => {
     description: "",
     location: "",
     employmentType: "Full-time",
-    salary: "",
+    minSalary: undefined as number | undefined,
+    maxSalary: undefined as number | undefined,
     company: "",
   });
 
@@ -118,7 +119,8 @@ const Dashboard = () => {
         description: "",
         location: "",
         employmentType: "Full-time",
-        salary: "",
+        minSalary: undefined,
+        maxSalary: undefined,
         company: "",
       });
       fetchJobs();
@@ -514,6 +516,9 @@ const Dashboard = () => {
                                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                   Expires On
                                 </th>
+                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                  Applicants
+                                </th>
                                 <th className="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                   Actions
                                 </th>
@@ -556,6 +561,9 @@ const Dashboard = () => {
                                           ? "N/A"
                                           : expDate.toLocaleDateString();
                                       })()}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                      {applications.filter(a => a.job._id === job._id).length}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-right">
                                       <div className="flex items-center justify-end gap-1.5">
@@ -681,21 +689,40 @@ const Dashboard = () => {
                                 <option>Part-time</option>
                                 <option>Contract</option>
                                 <option>Internship</option>
+                                <option>Remote</option>
+                                <option>Hybrid</option>
+                                <option>Work from home</option>
                               </select>
                             </div>
                           </div>
 
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                              Salary
-                            </label>
-                            <input
-                              name="salary"
-                              value={form.salary}
-                              onChange={handleChange}
-                              placeholder="e.g. $80,000 - $120,000"
-                              className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500"
-                            />
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Min Salary (LPA)
+                              </label>
+                              <input
+                                name="minSalary"
+                                type="number"
+                                placeholder="e.g. 8"
+                                value={form.minSalary || ""}
+                                onChange={(e) => setForm({ ...form, minSalary: e.target.value ? parseFloat(e.target.value) : undefined })}
+                                className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Max Salary (LPA)
+                              </label>
+                              <input
+                                name="maxSalary"
+                                type="number"
+                                placeholder="e.g. 12"
+                                value={form.maxSalary || ""}
+                                onChange={(e) => setForm({ ...form, maxSalary: e.target.value ? parseFloat(e.target.value) : undefined })}
+                                className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500"
+                              />
+                            </div>
                           </div>
 
                           <div>

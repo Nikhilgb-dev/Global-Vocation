@@ -9,11 +9,13 @@ interface Job {
     description?: string;
     location?: string;
     employmentType?: string;
-    salary?: string;
+    minSalary?: number;
+    maxSalary?: number;
     company?: string;
     applicantsCount?: number;
     status?: string;
     createdAt?: string;
+    expiresAt?: string;
 }
 
 interface Company {
@@ -34,7 +36,8 @@ const ManageJobsPage: React.FC = () => {
         description: "",
         location: "",
         employmentType: "Full-time",
-        salary: "",
+        minSalary: undefined,
+        maxSalary: undefined,
         company: "",
     });
 
@@ -98,7 +101,8 @@ const ManageJobsPage: React.FC = () => {
             description: "",
             location: "",
             employmentType: "Full-time",
-            salary: "",
+            minSalary: undefined,
+            maxSalary: undefined,
             company: role === "company_admin" ? company?._id : "",
         });
         setEditingJob(null);
@@ -137,7 +141,8 @@ const ManageJobsPage: React.FC = () => {
             description: job.description || "",
             location: job.location || "",
             employmentType: job.employmentType || "Full-time",
-            salary: job.salary || "",
+            minSalary: job.minSalary,
+            maxSalary: job.maxSalary,
             company: job.company || "",
         });
         setShowForm(true);
@@ -267,21 +272,40 @@ const ManageJobsPage: React.FC = () => {
                                         <option>Part-time</option>
                                         <option>Contract</option>
                                         <option>Internship</option>
+                                        <option>Remote</option>
+                                        <option>Hybrid</option>
+                                        <option>Work from home</option>
                                     </select>
                                 </div>
                             </div>
 
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                    Salary Range
-                                </label>
-                                <input
-                                    name="salary"
-                                    placeholder="e.g. $80,000 - $120,000"
-                                    value={form.salary}
-                                    onChange={handleChange}
-                                    className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                                />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        Min Salary (LPA)
+                                    </label>
+                                    <input
+                                        name="minSalary"
+                                        type="number"
+                                        placeholder="e.g. 8"
+                                        value={form.minSalary || ""}
+                                        onChange={(e) => setForm({ ...form, minSalary: e.target.value ? parseFloat(e.target.value) : undefined })}
+                                        className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        Max Salary (LPA)
+                                    </label>
+                                    <input
+                                        name="maxSalary"
+                                        type="number"
+                                        placeholder="e.g. 12"
+                                        value={form.maxSalary || ""}
+                                        onChange={(e) => setForm({ ...form, maxSalary: e.target.value ? parseFloat(e.target.value) : undefined })}
+                                        className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                    />
+                                </div>
                             </div>
 
                             <div>
@@ -376,12 +400,12 @@ const ManageJobsPage: React.FC = () => {
                                                             </svg>
                                                             {job.employmentType}
                                                         </span>
-                                                        {job.salary && (
+                                                        {(job.minSalary || job.maxSalary) && (
                                                             <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
                                                                 <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                                 </svg>
-                                                                {job.salary}
+                                                                {job.minSalary && job.maxSalary ? `${job.minSalary}-${job.maxSalary} LPA` : job.minSalary ? `${job.minSalary} LPA` : `${job.maxSalary} LPA`}
                                                             </span>
                                                         )}
                                                     </div>
@@ -406,6 +430,12 @@ const ManageJobsPage: React.FC = () => {
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                                     </svg>
                                                     Posted {new Date(job.createdAt || "").toLocaleDateString()}
+                                                </span>
+                                                <span className="flex items-center gap-1 text-blue-600 font-semibold">
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    </svg>
+                                                    Expires {job.expiresAt ? new Date(job.expiresAt).toLocaleDateString() : "N/A"}
                                                 </span>
                                             </div>
                                         </div>

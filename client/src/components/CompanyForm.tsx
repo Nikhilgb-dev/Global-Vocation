@@ -1,17 +1,35 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import API from "../api/api";
 import { toast } from "react-hot-toast";
 
-interface Props {
-    mode: "self" | "admin";
-    onSuccess?: () => void;
+interface CompanyFormData {
+    name: string;
+    domain: string;
+    industry: string;
+    size: string;
+    type: string;
+    salary: string;
+    address: string;
+    tagline: string;
+    description: string;
+    email: string;
+    contactNumber: string;
+    password: string;
+    authorizedSignatoryName: string;
+    authorizedSignatoryDesignation: string;
 }
 
-const CompanyForm: React.FC<Props> = ({ mode, onSuccess }) => {
+interface Props {
+    mode: "self" | "admin" | "edit";
+    onSuccess?: () => void;
+    initialData?: Partial<CompanyFormData>;
+}
+
+const CompanyForm: React.FC<Props> = ({ mode, onSuccess, initialData }) => {
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
 
-    const [form, setForm] = useState({
+    const [form, setForm] = useState<CompanyFormData>({
         name: "",
         domain: "",
         industry: "",
@@ -27,6 +45,12 @@ const CompanyForm: React.FC<Props> = ({ mode, onSuccess }) => {
         authorizedSignatoryName: "",
         authorizedSignatoryDesignation: "",
     });
+
+    useEffect(() => {
+        if (initialData) {
+            setForm(prev => ({ ...prev, ...initialData }));
+        }
+    }, [initialData]);
 
     const [logo, setLogo] = useState<File | null>(null);
     const [signature, setSignature] = useState<File | null>(null);
@@ -58,15 +82,21 @@ const CompanyForm: React.FC<Props> = ({ mode, onSuccess }) => {
                 );
 
             console.log("mode", mode);
-            const endpoint =
-                mode === "admin" ? "/companies/admin/create" : "/companies/register";
+            let endpoint = "/companies/register";
+            let method = API.post;
 
+            if (mode === "admin") {
+                endpoint = "/companies/admin/create";
+            } else if (mode === "edit") {
+                endpoint = "/companies/me";
+                method = API.put;
+            }
 
-            await API.post(endpoint, formData, {
+            await method(endpoint, formData, {
                 headers: { "Content-Type": "multipart/form-data" },
             });
 
-            toast.success("✅ Company registered successfully!");
+            toast.success(mode === "edit" ? "✅ Company details updated successfully!" : "✅ Company registered successfully!");
 
             if (onSuccess) setTimeout(() => onSuccess(), 800);
 
@@ -104,7 +134,7 @@ const CompanyForm: React.FC<Props> = ({ mode, onSuccess }) => {
     return (
         <div className="max-w-4xl w-full mx-auto bg-white rounded-2xl p-6 sm:p-10 shadow-lg border border-gray-100">
             <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-1 text-center sm:text-left">
-                Company Registration
+                {mode === "edit" ? "Edit Company Details" : "Company Registration"}
             </h2>
             <p className="text-xs sm:text-sm text-gray-600 mb-6 text-center sm:text-left">
                 Step {step} of 4 — {steps[step - 1]}
@@ -195,7 +225,7 @@ const CompanyForm: React.FC<Props> = ({ mode, onSuccess }) => {
                             placeholder="Company Tagline"
                             className="border rounded-md px-3 py-2 text-sm sm:text-base w-full"
                         />
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className={`grid grid-cols-1 ${mode === "edit" ? "" : "sm:grid-cols-2"} gap-3`}>
                             <input
                                 name="email"
                                 value={form.email}
@@ -204,15 +234,17 @@ const CompanyForm: React.FC<Props> = ({ mode, onSuccess }) => {
                                 required
                                 className="border rounded-md px-3 py-2 text-sm sm:text-base w-full"
                             />
-                            <input
-                                type="password"
-                                name="password"
-                                value={form.password}
-                                onChange={handleChange}
-                                placeholder="Set Company Account Password"
-                                required
-                                className="border rounded-md px-3 py-2 text-sm sm:text-base w-full"
-                            />
+                            {mode !== "edit" && (
+                                <input
+                                    type="password"
+                                    name="password"
+                                    value={form.password}
+                                    onChange={handleChange}
+                                    placeholder="Set Company Account Password"
+                                    required
+                                    className="border rounded-md px-3 py-2 text-sm sm:text-base w-full"
+                                />
+                            )}
                         </div>
                         <input
                             name="contactNumber"

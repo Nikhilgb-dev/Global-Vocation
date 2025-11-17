@@ -56,7 +56,7 @@ const Login = () => {
           Login
         </h2>
         <p className="text-gray-500 text-center mb-8">
-          Welcome back! Please sign in to continue.
+          Welcome back! Let's continue.
         </p>
 
         {/* Email Input */}
@@ -140,12 +140,12 @@ const Login = () => {
         </div>
 
         {/* Footer */}
-        <p className="mt-6 text-xs text-center text-gray-500">
+        {/* <p className="mt-6 text-xs text-center text-gray-500">
           Trouble signing in?{" "}
           <span className="text-blue-600 font-medium cursor-pointer hover:underline">
             Get help
           </span>
-        </p>
+        </p> */}
       </form>
     </div>
   );

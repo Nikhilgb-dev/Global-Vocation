@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import API from "@/api/api";
 import { toast } from "react-hot-toast";
+import EditProfileModal from "../components/EditProfileModal";
 
 interface CompanyData {
     name: string;
@@ -17,6 +18,7 @@ interface CompanyData {
 const CompanyProfilePage: React.FC = () => {
     const [company, setCompany] = useState<CompanyData | null>(null);
     const [loading, setLoading] = useState(true);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
     useEffect(() => {
         const loadCompany = async () => {
@@ -37,16 +39,24 @@ const CompanyProfilePage: React.FC = () => {
 
     return (
         <div className="max-w-3xl mx-auto bg-white shadow-sm border border-gray-200 rounded-lg p-6">
-            <div className="flex items-center gap-4 mb-6">
-                <img
-                    src={company.logo || "https://via.placeholder.com/80"}
-                    alt="Company Logo"
-                    className="w-20 h-20 rounded object-cover border"
-                />
-                <div>
-                    <h2 className="text-2xl font-semibold text-gray-800">{company.name}</h2>
-                    <p className="text-sm text-gray-500">{company.industry || "—"}</p>
+            <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-4">
+                    <img
+                        src={company.logo || "https://via.placeholder.com/80"}
+                        alt="Company Logo"
+                        className="w-20 h-20 rounded object-cover border"
+                    />
+                    <div>
+                        <h2 className="text-2xl font-semibold text-gray-800">{company.name}</h2>
+                        <p className="text-sm text-gray-500">{company.industry || "—"}</p>
+                    </div>
                 </div>
+                <button
+                    onClick={() => setIsEditModalOpen(true)}
+                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                >
+                    Edit Details
+                </button>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
@@ -88,6 +98,24 @@ const CompanyProfilePage: React.FC = () => {
             <div className="text-xs text-gray-500 mt-6">
                 Joined on {new Date(company.createdAt || "").toLocaleDateString()}
             </div>
+
+            <EditProfileModal
+                isOpen={isEditModalOpen}
+                onClose={() => setIsEditModalOpen(false)}
+                companyData={company}
+                onSuccess={() => {
+                    // Reload company data
+                    const loadCompany = async () => {
+                        try {
+                            const res = await API.get("/companies/me");
+                            setCompany(res.data);
+                        } catch (err: any) {
+                            toast.error(err.response?.data?.message || "Failed to reload profile");
+                        }
+                    };
+                    loadCompany();
+                }}
+            />
         </div>
     );
 };

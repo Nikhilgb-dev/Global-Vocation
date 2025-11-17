@@ -8,7 +8,8 @@ type JobFormProps = {
         description?: string;
         location?: string;
         employmentType?: string;
-        salaryRange?: string;
+        minSalary?: number;
+        maxSalary?: number;
         status?: "open" | "closed";
         responsibilities?: string;
         qualifications?: string;
@@ -24,7 +25,8 @@ const JobFormModal: React.FC<JobFormProps> = ({ initialData, onClose, onCreate, 
         description: "",
         location: "",
         employmentType: "Full-time",
-        salaryRange: "",
+        minSalary: undefined as number | undefined,
+        maxSalary: undefined as number | undefined,
         responsibilities: "",
         qualifications: "",
         status: "open" as "open" | "closed",
@@ -38,7 +40,8 @@ const JobFormModal: React.FC<JobFormProps> = ({ initialData, onClose, onCreate, 
                 description: initialData.description || "",
                 location: initialData.location || "",
                 employmentType: initialData.employmentType || "Full-time",
-                salaryRange: initialData.salaryRange || "",
+                minSalary: initialData.minSalary,
+                maxSalary: initialData.maxSalary,
                 responsibilities: initialData.responsibilities || "",
                 qualifications: initialData.qualifications || "",
                 status: initialData.status || "open",
@@ -94,12 +97,34 @@ const JobFormModal: React.FC<JobFormProps> = ({ initialData, onClose, onCreate, 
                             <option>Contract</option>
                             <option>Internship</option>
                             <option>Remote</option>
+                            <option>Hybrid</option>
+                            <option>Work from home</option>
                         </select>
                     </div>
 
-                    <div>
-                        <label className="block text-sm font-medium">Salary Range</label>
-                        <input name="salaryRange" value={form.salaryRange} onChange={handleChange} className="w-full px-3 py-2 border rounded-md" />
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium">Min Salary (LPA)</label>
+                            <input
+                                name="minSalary"
+                                type="number"
+                                placeholder="e.g. 8"
+                                value={form.minSalary || ""}
+                                onChange={(e) => setForm({ ...form, minSalary: e.target.value ? parseFloat(e.target.value) : undefined })}
+                                className="w-full px-3 py-2 border rounded-md"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium">Max Salary (LPA)</label>
+                            <input
+                                name="maxSalary"
+                                type="number"
+                                placeholder="e.g. 12"
+                                value={form.maxSalary || ""}
+                                onChange={(e) => setForm({ ...form, maxSalary: e.target.value ? parseFloat(e.target.value) : undefined })}
+                                className="w-full px-3 py-2 border rounded-md"
+                            />
+                        </div>
                     </div>
 
                     <div>

@@ -105,13 +105,27 @@ const CompanyLayout: React.FC = () => {
             <div className="flex-1 flex flex-col min-h-screen">
                 {/* Topbar for small screens */}
                 <header className="bg-white border-b border-gray-200 shadow-sm flex items-center justify-between px-4 py-3 lg:hidden">
-                    <button
-                        onClick={() => setSidebarOpen(true)}
-                        className="text-gray-700 hover:text-blue-700 focus:outline-none"
-                    >
-                        <Menu size={22} />
-                    </button>
-                    <h2 className="text-base font-semibold text-gray-800 truncate">
+                    <nav className="flex items-center gap-2 overflow-x-auto">
+                        {navItems.map((item) => {
+                            const Icon = item.icon;
+                            return (
+                                <NavLink
+                                    key={item.path}
+                                    to={item.path}
+                                    className={({ isActive }) =>
+                                        `flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium transition-colors ${isActive
+                                            ? "bg-blue-100 text-blue-700"
+                                            : "text-gray-700 hover:bg-gray-100"
+                                        }`
+                                    }
+                                >
+                                    <Icon size={16} />
+                                    <span className="hidden sm:inline">{item.label}</span>
+                                </NavLink>
+                            );
+                        })}
+                    </nav>
+                    <h2 className="text-base font-semibold text-gray-800 truncate ml-2">
                         {company?.name || "Company Dashboard"}
                     </h2>
                 </header>

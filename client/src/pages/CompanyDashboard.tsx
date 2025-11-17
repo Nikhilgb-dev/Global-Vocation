@@ -5,6 +5,8 @@ import ApplicationStatusDropdown from "@/components/ApplicationStatusDropdown";
 import ViewResumeModal from "@/components/ViewResumeModal";
 import FeedbackButton from "@/components/FeedbackButton";
 import ApplicantDetailsModal from "@/components/ApplicantDetailsModal";
+import EditJobModal from "@/components/EditJobModal";
+import CompanyForm from "@/components/CompanyForm";
 
 type DashboardData = {
     employeesCount: number;
@@ -37,6 +39,9 @@ const CompanyDashboard: React.FC = () => {
     const [resumeUrl, setResumeUrl] = useState<string | null>(null);
     const [selectedApplicant, setSelectedApplicant] = useState<any | null>(null);
     const [companyJobs, setCompanyJobs] = useState<any[]>([]);
+    const [showEditJobModal, setShowEditJobModal] = useState(false);
+    const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
+    const [showEditCompanyModal, setShowEditCompanyModal] = useState(false);
 
     const fetchDashboard = async () => {
         const res = await API.get("/companies/me/dashboard");
@@ -74,6 +79,16 @@ const CompanyDashboard: React.FC = () => {
         load();
     }, []);
 
+    const handleEditJob = (jobId: string) => {
+        setSelectedJobId(jobId);
+        setShowEditJobModal(true);
+    };
+
+    const handleJobUpdated = () => {
+        // Refresh jobs
+        API.get("/companies/me/jobs").then((res) => setCompanyJobs(res.data.jobs || []));
+    };
+
     if (loading)
         return (
             <div className="text-gray-500 text-center py-10">Loading dashboard...</div>
@@ -95,10 +110,17 @@ const CompanyDashboard: React.FC = () => {
                 <StatCard title="Total Hired" value={data.totalHired} />
                 <StatCard title="Active Jobs" value={data.activeJobs} />
                 <StatCard title="Expired Jobs" value={data.expiredJobs} />
-                <StatCard title="Pending Jobs" value={data.pendingJobs} />
             </div>
 
-            <FeedbackButton targetType="platform" />
+            {/* <div className="flex justify-between items-center">
+                <FeedbackButton targetType="platform" />
+                <button
+                    onClick={() => setShowEditCompanyModal(true)}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
+                >
+                    Edit Company Details
+                </button>
+            </div> */}
 
             {/* ====== JOB LIST WITH EXPIRY BADGES ====== */}
             <div className="bg-white border rounded-lg shadow-sm p-4 sm:p-6 mt-8">
@@ -109,7 +131,7 @@ const CompanyDashboard: React.FC = () => {
                 {companyJobs.length === 0 ? (
                     <p className="text-gray-500 text-center py-6">No jobs found.</p>
                 ) : (
-                    <div className="overflow-x-auto">
+                    <div className="">
                         <table className="w-full text-xs sm:text-sm border-t">
                             <thead className="bg-gray-50 text-gray-600 border-b">
                                 <tr>
@@ -117,36 +139,52 @@ const CompanyDashboard: React.FC = () => {
                                         Title
                                     </th>
                                     <th className="p-2 sm:p-3 text-left whitespace-nowrap">
-                                        Status
-                                    </th>
-                                    <th className="p-2 sm:p-3 text-left whitespace-nowrap">
                                         Expires On
                                     </th>
                                     <th className="p-2 sm:p-3 text-left whitespace-nowrap">
+                                        Status
+                                    </th>
+                                    <th className="p-2 sm:p-3 text-left whitespace-nowrap hidden sm:table-cell">
                                         Expiry State
+                                    </th>
+                                    <th className="p-2 sm:p-3 text-left whitespace-nowrap">
+                                        Applicants
+                                    </th>
+                                    <th className="p-2 sm:p-3 text-left whitespace-nowrap">
+                                        Actions
                                     </th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {companyJobs.map((job) => {
-                                    const expDate = new Date(job.expiresAt);
-                                    const daysLeft = Math.ceil(
-                                        (expDate.getTime() - Date.now()) /
-                                        (1000 * 60 * 60 * 24)
-                                    );
+                                    let expDate = null;
+                                    let daysLeft = null;
+                                    if (job.expiresAt) {
+                                        expDate = new Date(job.expiresAt);
+                                        daysLeft = Math.ceil(
+                                            (expDate.getTime() - Date.now()) /
+                                            (1000 * 60 * 60 * 24)
+                                        );
+                                    }
 
                                     let badgeClass =
-                                        "bg-green-50 text-green-700 ring-1 ring-green-600/20";
-                                    let badgeText = "Active";
+                                        "bg-gray-50 text-gray-700 ring-1 ring-gray-600/20";
+                                    let badgeText = "No Expiry";
 
-                                    if (daysLeft <= 0 || job.isExpired) {
+                                    if (job.expiresAt) {
                                         badgeClass =
-                                            "bg-red-50 text-red-700 ring-1 ring-red-600/20";
-                                        badgeText = "Expired";
-                                    } else if (daysLeft <= 7) {
-                                        badgeClass =
-                                            "bg-yellow-50 text-yellow-700 ring-1 ring-yellow-600/20";
-                                        badgeText = `Expiring Soon (${daysLeft}d)`;
+                                            "bg-green-50 text-green-700 ring-1 ring-green-600/20";
+                                        badgeText = "Active";
+
+                                        if ((daysLeft !== null && daysLeft <= 0) || job.isExpired) {
+                                            badgeClass =
+                                                "bg-red-50 text-red-700 ring-1 ring-red-600/20";
+                                            badgeText = "Expired";
+                                        } else if (daysLeft !== null && daysLeft <= 7) {
+                                            badgeClass =
+                                                "bg-yellow-50 text-yellow-700 ring-1 ring-yellow-600/20";
+                                            badgeText = `Expiring Soon (${daysLeft}d)`;
+                                        }
                                     }
 
                                     return (
@@ -157,18 +195,32 @@ const CompanyDashboard: React.FC = () => {
                                             <td className="p-2 sm:p-3 font-medium text-gray-900 whitespace-nowrap">
                                                 {job.title}
                                             </td>
+                                            <td className="p-2 sm:p-3 text-gray-600 whitespace-nowrap font-semibold text-blue-600">
+                                                {job.expiresAt ? new Date(job.expiresAt).toLocaleDateString() : "N/A"}
+                                            </td>
                                             <td className="p-2 sm:p-3 capitalize text-gray-600">
                                                 {job.status}
                                             </td>
-                                            <td className="p-2 sm:p-3 text-gray-600 whitespace-nowrap">
-                                                {new Date(job.expiresAt).toLocaleDateString()}
-                                            </td>
-                                            <td className="p-2 sm:p-3">
+                                            <td className="p-2 sm:p-3 hidden sm:table-cell">
                                                 <span
                                                     className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${badgeClass}`}
                                                 >
                                                     {badgeText}
                                                 </span>
+                                            </td>
+                                            <td className="p-2 sm:p-3 text-gray-600">
+                                                {applicants.filter(a => a.job._id === job._id).length}
+                                            </td>
+                                            <td className="p-2 sm:p-3">
+                                                <button
+                                                    onClick={() => handleEditJob(job._id)}
+                                                    className="text-blue-600 hover:text-blue-800"
+                                                    title="Edit Job"
+                                                >
+                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                    </svg>
+                                                </button>
                                             </td>
                                         </tr>
                                     );
@@ -190,14 +242,14 @@ const CompanyDashboard: React.FC = () => {
                         No applicants yet.
                     </div>
                 ) : (
-                    <div className="overflow-x-auto">
+                    <div className="">
                         <table className="w-full text-xs sm:text-sm border-t">
                             <thead className="bg-gray-50 text-gray-600 border-b">
                                 <tr>
                                     <th className="p-2 sm:p-3 text-left">Candidate</th>
                                     <th className="p-2 sm:p-3 text-left">Job Title</th>
                                     <th className="p-2 sm:p-3 text-left">Status</th>
-                                    <th className="p-2 sm:p-3 text-left">Applied On</th>
+                                    <th className="p-2 sm:p-3 text-left hidden sm:table-cell">Applied On</th>
                                     <th className="p-2 sm:p-3 text-left">Resume</th>
                                     <th className="p-2 sm:p-3 text-left">Details</th>
                                 </tr>
@@ -237,7 +289,7 @@ const CompanyDashboard: React.FC = () => {
                                                 onUpdated={fetchApplicants}
                                             />
                                         </td>
-                                        <td className="p-2 sm:p-3 text-gray-500">
+                                        <td className="p-2 sm:p-3 text-gray-500 hidden sm:table-cell">
                                             {new Date(a.createdAt).toLocaleDateString()}
                                         </td>
                                         <td
@@ -272,6 +324,39 @@ const CompanyDashboard: React.FC = () => {
                     resumeUrl={resumeUrl}
                     onClose={() => setResumeUrl(null)}
                 />
+            )}
+
+            {showEditJobModal && selectedJobId && (
+                <EditJobModal
+                    jobId={selectedJobId}
+                    onClose={() => setShowEditJobModal(false)}
+                    onJobUpdated={handleJobUpdated}
+                />
+            )}
+
+            {showEditCompanyModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+                    <div className="bg-white p-6 rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-xl font-bold">Edit Company Details</h2>
+                            <button
+                                onClick={() => setShowEditCompanyModal(false)}
+                                className="text-gray-500 hover:text-gray-700"
+                            >
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                        <CompanyForm
+                            mode="self"
+                            onSuccess={() => {
+                                setShowEditCompanyModal(false);
+                                // Optionally refresh company data
+                            }}
+                        />
+                    </div>
+                </div>
             )}
         </div>
     );
