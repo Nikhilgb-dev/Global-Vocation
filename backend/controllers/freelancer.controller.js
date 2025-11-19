@@ -320,3 +320,27 @@ export const withdrawFreelancerApplication = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+export const respondToFreelancerOffer = async (req, res) => {
+  try {
+    const { action } = req.body; // "accept" or "reject"
+    if (!["accept", "reject"].includes(action)) {
+      return res.status(400).json({ message: "Invalid action. Must be 'accept' or 'reject'" });
+    }
+
+    const application = await FreelancerApplication.findById(req.params.id).populate("freelancer", "name qualification location photo");
+
+    if (!application) return res.status(404).json({ message: "Application not found" });
+    if (application.user.toString() !== req.user._id.toString())
+      return res.status(403).json({ message: "Not authorized" });
+    if (application.status !== "hired")
+      return res.status(400).json({ message: "Can only respond to hired applications" });
+
+    application.status = action === "accept" ? "accepted" : "rejected";
+    await application.save();
+
+    res.json({ message: `Offer ${action}ed successfully`, application });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};

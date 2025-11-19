@@ -46,6 +46,7 @@ const AdminApplicationsTable = ({ applications }: { applications: Application[] 
                             <td className="px-6 py-4 whitespace-nowrap">
                                 <span className={`px-2 py-1 text-xs rounded-full ${app.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                                         app.status === 'accepted' ? 'bg-green-100 text-green-800' :
+                                        app.status === 'hired' ? 'bg-blue-100 text-blue-800' :
                                             'bg-red-100 text-red-800'
                                     }`}>
                                     {app.status}

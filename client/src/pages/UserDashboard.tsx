@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { CheckCircle, XCircle, Trash2, Eye } from "lucide-react";
 import JobDetailsModal from "@/components/JobDetailsModal";
 import FreelancerApplicationDetailsModal from "@/components/FreelancerApplicationDetailsModal";
+import OfferDetailsModal from "@/components/OfferDetailsModal";
 import FeedbackButton from "@/components/FeedbackButton";
 
 type AnyObj = Record<string, any>;
@@ -31,7 +32,7 @@ const EmptyState = ({ message }: { message: string }) => (
 );
 
 /** Mobile card for job application */
-const JobAppCard = ({ a, onView, onWithdraw }: { a: AnyObj; onView: (j: AnyObj) => void; onWithdraw: (id: string) => void }) => (
+const JobAppCard = ({ a, onView, onWithdraw, onViewOffer }: { a: AnyObj; onView: (j: AnyObj) => void; onWithdraw: (id: string) => void; onViewOffer: (app: AnyObj, type: "job") => void }) => (
     <motion.div
         layout
         initial={{ opacity: 0, y: 6 }}
@@ -50,9 +51,11 @@ const JobAppCard = ({ a, onView, onWithdraw }: { a: AnyObj; onView: (j: AnyObj) 
                     <span
                         className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${a.status === "hired"
                                 ? "bg-green-100 text-green-800"
-                                : a.status === "rejected"
-                                    ? "bg-red-100 text-red-800"
-                                    : "bg-gray-100 text-gray-800"
+                                : a.status === "accepted"
+                                    ? "bg-blue-100 text-blue-800"
+                                    : a.status === "rejected"
+                                        ? "bg-red-100 text-red-800"
+                                        : "bg-gray-100 text-gray-800"
                             }`}
                     >
                         {a.status || "applied"}
@@ -62,26 +65,47 @@ const JobAppCard = ({ a, onView, onWithdraw }: { a: AnyObj; onView: (j: AnyObj) 
         </div>
 
         <div className="mt-3 flex gap-2">
-            <button
-                onClick={() => onView(a.job)}
-                aria-label={`View job ${a.job?.title || ""}`}
-                className="flex-1 text-sm px-3 py-2 rounded-md border border-blue-600 text-blue-600 hover:bg-blue-50 transition"
-            >
-                <Eye className="w-4 h-4 inline-block mr-2" /> View
-            </button>
-            <button
-                onClick={() => onWithdraw(a._id)}
-                aria-label="Withdraw application"
-                className="text-sm px-3 py-2 rounded-md border border-red-600 text-red-600 hover:bg-red-50 transition"
-            >
-                <Trash2 className="w-4 h-4 inline-block mr-2" /> Withdraw
-            </button>
+            {a.status === "hired" ? (
+                <>
+                    <button
+                        onClick={() => onViewOffer(a, "job")}
+                        aria-label="View job offer details"
+                        className="flex-1 text-sm px-3 py-2 rounded-md border border-blue-600 text-blue-600 hover:bg-blue-50 transition"
+                    >
+                        <Eye className="w-4 h-4 inline-block mr-2" /> View Offer
+                    </button>
+                    <button
+                        onClick={() => onWithdraw(a._id)}
+                        aria-label="Withdraw application"
+                        className="text-sm px-3 py-2 rounded-md border border-red-600 text-red-600 hover:bg-red-50 transition"
+                    >
+                        <Trash2 className="w-4 h-4 inline-block mr-2" /> Withdraw
+                    </button>
+                </>
+            ) : (
+                <>
+                    <button
+                        onClick={() => onView(a.job)}
+                        aria-label={`View job ${a.job?.title || ""}`}
+                        className="flex-1 text-sm px-3 py-2 rounded-md border border-blue-600 text-blue-600 hover:bg-blue-50 transition"
+                    >
+                        <Eye className="w-4 h-4 inline-block mr-2" /> View
+                    </button>
+                    <button
+                        onClick={() => onWithdraw(a._id)}
+                        aria-label="Withdraw application"
+                        className="text-sm px-3 py-2 rounded-md border border-red-600 text-red-600 hover:bg-red-50 transition"
+                    >
+                        <Trash2 className="w-4 h-4 inline-block mr-2" /> Withdraw
+                    </button>
+                </>
+            )}
         </div>
     </motion.div>
 );
 
 /** Mobile card for freelancer application */
-const FreelancerAppCard = ({ a, onView, onWithdraw }: { a: AnyObj; onView: (app: AnyObj) => void; onWithdraw: (id: string) => void }) => (
+const FreelancerAppCard = ({ a, onView, onWithdraw, onViewOffer }: { a: AnyObj; onView: (app: AnyObj) => void; onWithdraw: (id: string) => void; onViewOffer: (app: AnyObj, type: "freelancer") => void }) => (
     <motion.div
         layout
         initial={{ opacity: 0, y: 6 }}
@@ -100,9 +124,11 @@ const FreelancerAppCard = ({ a, onView, onWithdraw }: { a: AnyObj; onView: (app:
                     <span
                         className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${a.status === "hired"
                                 ? "bg-green-100 text-green-800"
-                                : a.status === "rejected"
-                                    ? "bg-red-100 text-red-800"
-                                    : "bg-gray-100 text-gray-800"
+                                : a.status === "accepted"
+                                    ? "bg-blue-100 text-blue-800"
+                                    : a.status === "rejected"
+                                        ? "bg-red-100 text-red-800"
+                                        : "bg-gray-100 text-gray-800"
                             }`}
                     >
                         {a.status || "applied"}
@@ -112,20 +138,41 @@ const FreelancerAppCard = ({ a, onView, onWithdraw }: { a: AnyObj; onView: (app:
         </div>
 
         <div className="mt-3 flex gap-2">
-            <button
-                onClick={() => onView(a)}
-                aria-label="View freelancer application"
-                className="flex-1 text-sm px-3 py-2 rounded-md border border-blue-600 text-blue-600 hover:bg-blue-50 transition"
-            >
-                <Eye className="w-4 h-4 inline-block mr-2" /> View
-            </button>
-            <button
-                onClick={() => onWithdraw(a._id)}
-                aria-label="Withdraw freelancer application"
-                className="text-sm px-3 py-2 rounded-md border border-red-600 text-red-600 hover:bg-red-50 transition"
-            >
-                <Trash2 className="w-4 h-4 inline-block mr-2" /> Withdraw
-            </button>
+            {a.status === "hired" ? (
+                <>
+                    <button
+                        onClick={() => onViewOffer(a, "freelancer")}
+                        aria-label="View freelancer offer details"
+                        className="flex-1 text-sm px-3 py-2 rounded-md border border-blue-600 text-blue-600 hover:bg-blue-50 transition"
+                    >
+                        <Eye className="w-4 h-4 inline-block mr-2" /> View Offer
+                    </button>
+                    <button
+                        onClick={() => onWithdraw(a._id)}
+                        aria-label="Withdraw freelancer application"
+                        className="text-sm px-3 py-2 rounded-md border border-red-600 text-red-600 hover:bg-red-50 transition"
+                    >
+                        <Trash2 className="w-4 h-4 inline-block mr-2" /> Withdraw
+                    </button>
+                </>
+            ) : (
+                <>
+                    <button
+                        onClick={() => onView(a)}
+                        aria-label="View freelancer application"
+                        className="flex-1 text-sm px-3 py-2 rounded-md border border-blue-600 text-blue-600 hover:bg-blue-50 transition"
+                    >
+                        <Eye className="w-4 h-4 inline-block mr-2" /> View
+                    </button>
+                    <button
+                        onClick={() => onWithdraw(a._id)}
+                        aria-label="Withdraw freelancer application"
+                        className="text-sm px-3 py-2 rounded-md border border-red-600 text-red-600 hover:bg-red-50 transition"
+                    >
+                        <Trash2 className="w-4 h-4 inline-block mr-2" /> Withdraw
+                    </button>
+                </>
+            )}
         </div>
     </motion.div>
 );
@@ -137,6 +184,7 @@ const UserDashboard: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [selectedJob, setSelectedJob] = useState<AnyObj | null>(null);
     const [selectedFreelancerApplication, setSelectedFreelancerApplication] = useState<AnyObj | null>(null);
+    const [selectedOffer, setSelectedOffer] = useState<{ application: AnyObj; type: "job" | "freelancer" } | null>(null);
 
     // Fetchers
     const fetchApplications = useCallback(async () => {
@@ -178,6 +226,20 @@ const UserDashboard: React.FC = () => {
         await fetchFreelancerApplications();
     };
 
+    const respondToJobOffer = async (applicationId: string, action: "accept" | "reject") => {
+        if (!window.confirm(`Are you sure you want to ${action} this job offer?`)) return;
+        await API.put(`/applications/${applicationId}/respond`, { action });
+        await fetchApplications();
+        setSelectedOffer(null);
+    };
+
+    const respondToFreelancerOffer = async (applicationId: string, action: "accept" | "reject") => {
+        if (!window.confirm(`Are you sure you want to ${action} this freelancer offer?`)) return;
+        await API.put(`/freelancers/applications/${applicationId}/respond`, { action });
+        await fetchFreelancerApplications();
+        setSelectedOffer(null);
+    };
+
     // memoized stats so re-renders don't recompute
     const stats = useMemo(() => {
         const jobApplications = applications.length;
@@ -216,7 +278,13 @@ const UserDashboard: React.FC = () => {
                         <EmptyState message="You haven’t applied to any jobs yet." />
                     ) : (
                         applications.map((a) => (
-                            <JobAppCard key={a._id} a={a} onView={(j) => setSelectedJob(j)} onWithdraw={withdrawApplication} />
+                            <JobAppCard
+                                key={a._id}
+                                a={a}
+                                onView={(j) => setSelectedJob(j)}
+                                onWithdraw={withdrawApplication}
+                                onViewOffer={(app, type) => setSelectedOffer({ application: app, type })}
+                            />
                         ))
                     )}
                 </div>
@@ -244,6 +312,8 @@ const UserDashboard: React.FC = () => {
                                         <td className="p-3 capitalize">
                                             {a.status === "hired" ? (
                                                 <CheckCircle className="w-4 h-4 text-green-600 inline-block mr-1" />
+                                            ) : a.status === "accepted" ? (
+                                                <CheckCircle className="w-4 h-4 text-blue-600 inline-block mr-1" />
                                             ) : a.status === "rejected" ? (
                                                 <XCircle className="w-4 h-4 text-red-600 inline-block mr-1" />
                                             ) : null}
@@ -251,12 +321,25 @@ const UserDashboard: React.FC = () => {
                                         </td>
                                         <td className="p-3 text-gray-500">{formatDate(a.createdAt || a.appliedAt)}</td>
                                         <td className="p-3 text-right space-x-3">
-                                            <button onClick={() => setSelectedJob(a.job)} className="text-blue-600 hover:underline text-sm inline-flex items-center">
-                                                <Eye className="w-4 h-4 inline-block mr-1" /> View
-                                            </button>
-                                            <button onClick={() => withdrawApplication(a._id)} className="text-red-600 hover:underline text-sm inline-flex items-center">
-                                                <Trash2 className="w-4 h-4 inline-block mr-1" /> Withdraw
-                                            </button>
+                                            {a.status === "hired" ? (
+                                                <>
+                                                    <button onClick={() => setSelectedOffer({ application: a, type: "job" })} className="text-blue-600 hover:underline text-sm inline-flex items-center">
+                                                        <Eye className="w-4 h-4 inline-block mr-1" /> View Offer
+                                                    </button>
+                                                    <button onClick={() => withdrawApplication(a._id)} className="text-red-600 hover:underline text-sm inline-flex items-center">
+                                                        <Trash2 className="w-4 h-4 inline-block mr-1" /> Withdraw
+                                                    </button>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <button onClick={() => setSelectedJob(a.job)} className="text-blue-600 hover:underline text-sm inline-flex items-center">
+                                                        <Eye className="w-4 h-4 inline-block mr-1" /> View
+                                                    </button>
+                                                    <button onClick={() => withdrawApplication(a._id)} className="text-red-600 hover:underline text-sm inline-flex items-center">
+                                                        <Trash2 className="w-4 h-4 inline-block mr-1" /> Withdraw
+                                                    </button>
+                                                </>
+                                            )}
                                         </td>
                                     </tr>
                                 ))}
@@ -276,7 +359,13 @@ const UserDashboard: React.FC = () => {
                         <EmptyState message="You haven't applied to any freelancer services yet." />
                     ) : (
                         freelancerApplications.map((a) => (
-                            <FreelancerAppCard key={a._id} a={a} onView={(app) => setSelectedFreelancerApplication(app)} onWithdraw={withdrawFreelancerApplication} />
+                            <FreelancerAppCard
+                                key={a._id}
+                                a={a}
+                                onView={(app) => setSelectedFreelancerApplication(app)}
+                                onWithdraw={withdrawFreelancerApplication}
+                                onViewOffer={(app, type) => setSelectedOffer({ application: app, type })}
+                            />
                         ))
                     )}
                 </div>
@@ -304,6 +393,8 @@ const UserDashboard: React.FC = () => {
                                         <td className="p-3 capitalize">
                                             {a.status === "hired" ? (
                                                 <CheckCircle className="w-4 h-4 text-green-600 inline-block mr-1" />
+                                            ) : a.status === "accepted" ? (
+                                                <CheckCircle className="w-4 h-4 text-blue-600 inline-block mr-1" />
                                             ) : a.status === "rejected" ? (
                                                 <XCircle className="w-4 h-4 text-red-600 inline-block mr-1" />
                                             ) : null}
@@ -311,12 +402,25 @@ const UserDashboard: React.FC = () => {
                                         </td>
                                         <td className="p-3 text-gray-500">{formatDate(a.appliedAt || a.createdAt)}</td>
                                         <td className="p-3 text-right space-x-3">
-                                            <button onClick={() => setSelectedFreelancerApplication(a)} className="text-blue-600 hover:underline text-sm inline-flex items-center">
-                                                <Eye className="w-4 h-4 inline-block mr-1" /> View
-                                            </button>
-                                            <button onClick={() => withdrawFreelancerApplication(a._id)} className="text-red-600 hover:underline text-sm inline-flex items-center">
-                                                <Trash2 className="w-4 h-4 inline-block mr-1" /> Withdraw
-                                            </button>
+                                            {a.status === "hired" ? (
+                                                <>
+                                                    <button onClick={() => setSelectedOffer({ application: a, type: "freelancer" })} className="text-blue-600 hover:underline text-sm inline-flex items-center">
+                                                        <Eye className="w-4 h-4 inline-block mr-1" /> View Offer
+                                                    </button>
+                                                    <button onClick={() => withdrawFreelancerApplication(a._id)} className="text-red-600 hover:underline text-sm inline-flex items-center">
+                                                        <Trash2 className="w-4 h-4 inline-block mr-1" /> Withdraw
+                                                    </button>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <button onClick={() => setSelectedFreelancerApplication(a)} className="text-blue-600 hover:underline text-sm inline-flex items-center">
+                                                        <Eye className="w-4 h-4 inline-block mr-1" /> View
+                                                    </button>
+                                                    <button onClick={() => withdrawFreelancerApplication(a._id)} className="text-red-600 hover:underline text-sm inline-flex items-center">
+                                                        <Trash2 className="w-4 h-4 inline-block mr-1" /> Withdraw
+                                                    </button>
+                                                </>
+                                            )}
                                         </td>
                                     </tr>
                                 ))}
@@ -330,6 +434,29 @@ const UserDashboard: React.FC = () => {
 
             {selectedFreelancerApplication && (
                 <FreelancerApplicationDetailsModal application={selectedFreelancerApplication} onClose={() => setSelectedFreelancerApplication(null)} />
+            )}
+
+            {selectedOffer && (
+                <OfferDetailsModal
+                    isOpen={true}
+                    onClose={() => setSelectedOffer(null)}
+                    application={selectedOffer.application}
+                    type={selectedOffer.type}
+                    onAccept={() => {
+                        if (selectedOffer.type === "job") {
+                            respondToJobOffer(selectedOffer.application._id, "accept");
+                        } else {
+                            respondToFreelancerOffer(selectedOffer.application._id, "accept");
+                        }
+                    }}
+                    onReject={() => {
+                        if (selectedOffer.type === "job") {
+                            respondToJobOffer(selectedOffer.application._id, "reject");
+                        } else {
+                            respondToFreelancerOffer(selectedOffer.application._id, "reject");
+                        }
+                    }}
+                />
             )}
 
             <FeedbackButton targetType="platform" />

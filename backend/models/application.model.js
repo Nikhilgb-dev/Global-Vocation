@@ -95,7 +95,7 @@ const applicationSchema = new mongoose.Schema(
     // hiring lifecycle status
     status: {
       type: String,
-      enum: ["applied", "reviewed", "interview", "offer", "hired", "rejected"],
+      enum: ["applied", "reviewed", "interview", "offer", "hired", "accepted", "rejected"],
       default: "applied",
     },
 

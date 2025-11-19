@@ -43,7 +43,7 @@ const freelancerApplicationSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["applied", "reviewed", "shortlisted", "hired", "rejected"],
+      enum: ["applied", "reviewed", "shortlisted", "hired", "accepted", "rejected"],
       default: "applied",
     },
     appliedAt: {
