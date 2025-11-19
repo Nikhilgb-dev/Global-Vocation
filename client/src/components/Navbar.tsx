@@ -198,7 +198,7 @@ export default function Navbar() {
               <img
                 src={logo}
                 alt="Plabonic"
-                className="h-10 w-auto object-contain transition-transform duration-200 group-hover:scale-105"
+                className="h-12 w-auto object-contain transition-transform duration-200 group-hover:scale-105"
               />
               <span className="absolute -top-1 -right-8 bg-orange-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">
                 Beta
@@ -232,15 +232,6 @@ export default function Navbar() {
               Get Help
             </button>
 
-            {dashboardLink && (
-              <NavLink
-                to={dashboardLink.to}
-                className="px-4 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 text-white text-sm font-medium shadow-lg hover:shadow-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-200 animate-pulse flex items-center gap-2"
-              >
-                <LayoutDashboard className="w-4 h-4" />
-                <span className="hidden sm:inline">{dashboardLink.label}</span>
-              </NavLink>
-            )}
 
             {user ? (
               <>
@@ -493,7 +484,7 @@ export default function Navbar() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
                   <input
                     type="text"
-                    value="John Doe"
+                    value="Raghav Naidu"
                     readOnly
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700"
                   />
@@ -502,7 +493,7 @@ export default function Navbar() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
                   <input
                     type="email"
-                    value="john.doe@example.com"
+                    value="Plabonic.hq@gmail.com"
                     readOnly
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700"
                   />
@@ -511,7 +502,7 @@ export default function Navbar() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Contact Number</label>
                   <input
                     type="tel"
-                    value="+1-234-567-8900"
+                    value="+91-8310242649"
                     readOnly
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700"
                   />

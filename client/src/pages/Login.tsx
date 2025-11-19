@@ -4,10 +4,12 @@ import { toast } from "react-hot-toast";
 import React, { useState } from "react";
 import API from "../api/api";
 import { useNavigate, Link } from "react-router-dom";
+import ForgotPasswordModal from "../components/ForgotPasswordModal";
 
 const Login = () => {
   const [form, setForm] = useState({ email: "", password: "" });
   const [keepLoggedIn, setKeepLoggedIn] = useState(false);
+  const [showForgotModal, setShowForgotModal] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -90,6 +92,17 @@ const Login = () => {
           />
         </div>
 
+        {/* Forgot Password Link */}
+        <div className="text-right mb-4">
+          <button
+            type="button"
+            onClick={() => setShowForgotModal(true)}
+            className="text-sm text-blue-600 hover:underline"
+          >
+            Forgot Password?
+          </button>
+        </div>
+
         {/* Keep me logged in */}
         <div className="flex items-center mb-6 text-sm text-gray-600">
           <input
@@ -150,6 +163,11 @@ const Login = () => {
           </span>
         </p> */}
       </form>
+
+      <ForgotPasswordModal
+        isOpen={showForgotModal}
+        onClose={() => setShowForgotModal(false)}
+      />
     </div>
   );
 };

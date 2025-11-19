@@ -3,12 +3,14 @@ import API from "@/api/api";
 import { useNavigate } from "react-router-dom";
 import { useCompany } from "../contexts/CompanyContext";
 import { toast } from "react-hot-toast";
+import ForgotPasswordModal from "../components/ForgotPasswordModal";
 
 const CompanyLoginPage: React.FC = () => {
     const { login } = useCompany();
     const navigate = useNavigate();
     const [form, setForm] = useState({ email: "", password: "" });
     const [loading, setLoading] = useState(false);
+    const [showForgotModal, setShowForgotModal] = useState(false);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
         setForm({ ...form, [e.target.name]: e.target.value });
@@ -57,6 +59,15 @@ const CompanyLoginPage: React.FC = () => {
                             className="mt-1 block w-full px-3 py-2 border rounded-md"
                         />
                     </div>
+                    <div className="text-right mb-4">
+                        <button
+                            type="button"
+                            onClick={() => setShowForgotModal(true)}
+                            className="text-sm text-blue-600 hover:underline"
+                        >
+                            Forgot Password?
+                        </button>
+                    </div>
                     <div className="flex justify-end">
                         <button
                             type="submit"
@@ -68,6 +79,10 @@ const CompanyLoginPage: React.FC = () => {
                     </div>
                 </form>
             </div>
+            <ForgotPasswordModal
+                isOpen={showForgotModal}
+                onClose={() => setShowForgotModal(false)}
+            />
         </div>
     );
 };
