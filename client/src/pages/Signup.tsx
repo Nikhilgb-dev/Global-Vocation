@@ -10,11 +10,6 @@ const Signup = () => {
     name: "",
     email: "",
     password: "",
-    headline: "",
-    description: "",
-    location: "",
-    website: "",
-    skills: "",
     linkedin: "",
     github: "",
     twitter: "",
@@ -61,7 +56,7 @@ const Signup = () => {
     }
   };
 
-  const totalSteps = 3;
+  const totalSteps = 2;
   const progress = (step / totalSteps) * 100;
 
   return (
@@ -129,55 +124,8 @@ const Signup = () => {
           </div>
         )}
 
-        {/* Step 2: Professional Details */}
+        {/* Step 2: Social Links */}
         {step === 2 && (
-          <div className="space-y-3">
-            <h3 className="font-semibold text-lg mb-3">Professional Details</h3>
-            <input
-              type="text"
-              name="headline"
-              placeholder="Headline (e.g. Full Stack Dev)"
-              value={form.headline}
-              onChange={handleChange}
-              className="w-full p-2 border rounded"
-            />
-            <textarea
-              name="description"
-              placeholder="About you"
-              value={form.description}
-              onChange={handleChange}
-              rows={4}
-              className="w-full p-2 border rounded"
-            />
-            <input
-              type="text"
-              name="location"
-              placeholder="Location"
-              value={form.location}
-              onChange={handleChange}
-              className="w-full p-2 border rounded"
-            />
-            <input
-              type="text"
-              name="website"
-              placeholder="Personal Website"
-              value={form.website}
-              onChange={handleChange}
-              className="w-full p-2 border rounded"
-            />
-            <input
-              type="text"
-              name="skills"
-              placeholder="Skills (comma separated)"
-              value={form.skills}
-              onChange={handleChange}
-              className="w-full p-2 border rounded"
-            />
-          </div>
-        )}
-
-        {/* Step 3: Social Links */}
-        {step === 3 && (
           <div className="space-y-3">
             <h3 className="font-semibold text-lg mb-3">Social Links</h3>
             <p className="text-sm text-gray-600 mb-4">Connect your social profiles (optional)</p>
@@ -231,7 +179,8 @@ const Signup = () => {
             </button>
           ) : (
             <button
-              type="submit"
+              type="button"
+              onClick={handleSubmit}
               className="flex-1 bg-brand text-white py-2 rounded-md font-medium hover:bg-brand-dark transition"
             >
               Sign Up

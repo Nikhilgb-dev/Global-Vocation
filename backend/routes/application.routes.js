@@ -9,7 +9,7 @@ router.get("/me", protect, async (req, res) => {
   const apps = await Application.find({ user: req.user._id })
     .populate({
       path: "job",
-      populate: { path: "company", select: "name logo" },
+      populate: { path: "company", select: "name logo email contactNumber" },
     })
     .sort({ createdAt: -1 });
   res.json({ applications: apps });

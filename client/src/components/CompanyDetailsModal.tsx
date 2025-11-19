@@ -114,7 +114,7 @@ const CompanyDetailsModal: React.FC<Props> = ({ company, onClose, onRefresh, isA
 
                 {/* Authorized Signatory */}
                 <div className="border-t pt-4 mb-6">
-                    <h3 className="text-lg font-semibold mb-2">Authorized Signatory</h3>
+                    <h3 className="text-lg font-semibold mb-2">Authorized person</h3>
                     <div className="grid sm:grid-cols-2 gap-3">
                         <div>
                             <h4 className="text-sm font-semibold text-gray-700">Name</h4>
@@ -126,7 +126,7 @@ const CompanyDetailsModal: React.FC<Props> = ({ company, onClose, onRefresh, isA
                         </div>
                         {company.authorizedSignatory?.signature && (
                             <div className="sm:col-span-2 mt-2">
-                                <h4 className="text-sm font-semibold text-gray-700 mb-1">Digital Signature</h4>
+                                <h4 className="text-sm font-semibold text-gray-700 mb-1">Authorized personal [ ID Card ]</h4>
                                 <img
                                     src={company.authorizedSignatory.signature}
                                     alt="Signature"

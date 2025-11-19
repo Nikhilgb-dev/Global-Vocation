@@ -197,7 +197,7 @@ export const getMyFreelancerApplications = async (req, res) => {
     const applications = await FreelancerApplication.find({
       user: req.user._id,
     })
-      .populate("freelancer", "name qualification location photo")
+      .populate("freelancer", "name qualification location photo contact email")
       .sort({ createdAt: -1 });
 
     res.json(applications);

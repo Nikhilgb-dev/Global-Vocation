@@ -47,6 +47,12 @@ const JobAppCard = ({ a, onView, onWithdraw, onViewOffer }: { a: AnyObj; onView:
 
             <div className="text-right">
                 <div className="text-xs text-gray-500">{formatDate(a.createdAt || a.appliedAt)}</div>
+                {a.status === "interview" && (
+                    <div className="mt-1 text-xs text-gray-600">
+                        {a.job?.company?.email && <div>Email: {a.job.company.email}</div>}
+                        {a.job?.company?.contactNumber && <div>Phone: {a.job.company.contactNumber}</div>}
+                    </div>
+                )}
                 <div className="mt-2">
                     <span
                         className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${a.status === "hired"
@@ -120,6 +126,12 @@ const FreelancerAppCard = ({ a, onView, onWithdraw, onViewOffer }: { a: AnyObj; 
 
             <div className="text-right">
                 <div className="text-xs text-gray-500">{formatDate(a.appliedAt || a.createdAt)}</div>
+                {a.status === "shortlisted" && (
+                    <div className="mt-1 text-xs text-gray-600">
+                        {a.freelancer?.email && <div>Email: {a.freelancer.email}</div>}
+                        {a.freelancer?.contact && <div>Phone: {a.freelancer.contact}</div>}
+                    </div>
+                )}
                 <div className="mt-2">
                     <span
                         className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${a.status === "hired"
@@ -301,6 +313,7 @@ const UserDashboard: React.FC = () => {
                                     <th className="p-3 text-left">Company</th>
                                     <th className="p-3 text-left">Status</th>
                                     <th className="p-3 text-left">Applied On</th>
+                                    <th className="p-3 text-left">Contact Details</th>
                                     <th className="p-3 text-right">Actions</th>
                                 </tr>
                             </thead>
@@ -320,6 +333,14 @@ const UserDashboard: React.FC = () => {
                                             {a.status || "applied"}
                                         </td>
                                         <td className="p-3 text-gray-500">{formatDate(a.createdAt || a.appliedAt)}</td>
+                                        <td className="p-3 text-gray-500">
+                                            {a.status === "interview" && (
+                                                <div className="text-xs">
+                                                    {a.job?.company?.email && <div>Email: {a.job.company.email}</div>}
+                                                    {a.job?.company?.contactNumber && <div>Phone: {a.job.company.contactNumber}</div>}
+                                                </div>
+                                            )}
+                                        </td>
                                         <td className="p-3 text-right space-x-3">
                                             {a.status === "hired" ? (
                                                 <>
@@ -382,6 +403,7 @@ const UserDashboard: React.FC = () => {
                                     <th className="p-3 text-left">Service</th>
                                     <th className="p-3 text-left">Status</th>
                                     <th className="p-3 text-left">Applied On</th>
+                                    <th className="p-3 text-left">Contact Details</th>
                                     <th className="p-3 text-right">Actions</th>
                                 </tr>
                             </thead>
@@ -401,6 +423,14 @@ const UserDashboard: React.FC = () => {
                                             {a.status || "applied"}
                                         </td>
                                         <td className="p-3 text-gray-500">{formatDate(a.appliedAt || a.createdAt)}</td>
+                                        <td className="p-3 text-gray-500">
+                                            {a.status === "shortlisted" && (
+                                                <div className="text-xs">
+                                                    {a.freelancer?.email && <div>Email: {a.freelancer.email}</div>}
+                                                    {a.freelancer?.contact && <div>Phone: {a.freelancer.contact}</div>}
+                                                </div>
+                                            )}
+                                        </td>
                                         <td className="p-3 text-right space-x-3">
                                             {a.status === "hired" ? (
                                                 <>
