@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import API from "../api/api";
 import toast from "react-hot-toast";
-import { Calendar, Users, Eye, Edit, Trash2, Download } from "lucide-react";
+import { Calendar, Users, Download } from "lucide-react";
 import EditFreelancerModal from "../components/EditFreelancerModal";
 
 interface Application {
@@ -41,7 +41,9 @@ const FreelancerDashboard: React.FC = () => {
   const [applications, setApplications] = useState<Application[]>([]);
   const [freelancer, setFreelancer] = useState<Freelancer | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"applications" | "profile">("applications");
+  const [activeTab, setActiveTab] = useState<"applications" | "profile">(
+    "applications"
+  );
   const [showEditModal, setShowEditModal] = useState(false);
 
   useEffect(() => {
@@ -50,13 +52,13 @@ const FreelancerDashboard: React.FC = () => {
 
   const fetchFreelancerData = async () => {
     try {
-      // Get current user's freelancer profile
       const freelancerRes = await API.get("/freelancers/me");
       setFreelancer(freelancerRes.data);
 
-      // Get applications for this freelancer
       if (freelancerRes.data) {
-        const applicationsRes = await API.get(`/freelancers/${freelancerRes.data._id}/applications`);
+        const applicationsRes = await API.get(
+          `/freelancers/${freelancerRes.data._id}/applications`
+        );
         setApplications(applicationsRes.data);
       }
     } catch (err: any) {
@@ -66,9 +68,14 @@ const FreelancerDashboard: React.FC = () => {
     }
   };
 
-  const updateApplicationStatus = async (applicationId: string, status: string) => {
+  const updateApplicationStatus = async (
+    applicationId: string,
+    status: string
+  ) => {
     try {
-      await API.put(`/freelancers/applications/${applicationId}/status`, { status });
+      await API.put(`/freelancers/applications/${applicationId}/status`, {
+        status,
+      });
       toast.success("Application status updated");
       fetchFreelancerData();
     } catch (err: any) {
@@ -77,46 +84,60 @@ const FreelancerDashboard: React.FC = () => {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'applied': return 'bg-blue-100 text-blue-800';
-      case 'reviewed': return 'bg-yellow-100 text-yellow-800';
-      case 'shortlisted': return 'bg-green-100 text-green-800';
-      case 'hired': return 'bg-purple-100 text-purple-800';
-      case 'accepted': return 'bg-cyan-100 text-cyan-800';
-      case 'rejected': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case "applied":
+        return "bg-blue-100 text-blue-800";
+      case "reviewed":
+        return "bg-yellow-100 text-yellow-800";
+      case "shortlisted":
+        return "bg-green-100 text-green-800";
+      case "hired":
+        return "bg-purple-100 text-purple-800";
+      case "accepted":
+        return "bg-cyan-100 text-cyan-800";
+      case "rejected":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen flex items-center justify-center overflow-x-hidden">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="min-h-screen bg-gray-50 overflow-x-hidden">
+      <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+
         {/* Header */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Freelancer Dashboard</h1>
+        <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 mb-4 sm:mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+            Freelancer Dashboard
+          </h1>
+
           {freelancer && (
-            <div className="flex items-center gap-4 text-gray-600">
-              <span className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-3 text-gray-600">
+              <span className="inline-flex items-center gap-2">
                 <Users className="w-5 h-5" />
-                {freelancer.name}
+                <span className="truncate max-w-[200px] sm:max-w-none">
+                  {freelancer.name}
+                </span>
               </span>
-              <span className="flex items-center gap-2">
+
+              <span className="inline-flex items-center gap-2">
                 <Calendar className="w-5 h-5" />
                 Expires: {formatDate(freelancer.expiryDate)}
               </span>
@@ -125,26 +146,25 @@ const FreelancerDashboard: React.FC = () => {
         </div>
 
         {/* Tabs */}
-        <div className="bg-white rounded-lg shadow-sm mb-6">
-          <div className="border-b border-gray-200">
-            <nav className="flex">
+        <div className="bg-white rounded-lg shadow-sm mb-4 sm:mb-6">
+          <div className="border-b border-gray-200 overflow-x-auto">
+            <nav className="flex min-w-max sm:min-w-0">
               <button
                 onClick={() => setActiveTab("applications")}
-                className={`px-6 py-3 text-sm font-medium border-b-2 ${
-                  activeTab === "applications"
+                className={`px-4 sm:px-6 py-3 text-sm font-medium border-b-2 whitespace-nowrap ${activeTab === "applications"
                     ? "border-blue-500 text-blue-600"
                     : "border-transparent text-gray-500 hover:text-gray-700"
-                }`}
+                  }`}
               >
                 Applications ({applications.length})
               </button>
+
               <button
                 onClick={() => setActiveTab("profile")}
-                className={`px-6 py-3 text-sm font-medium border-b-2 ${
-                  activeTab === "profile"
+                className={`px-4 sm:px-6 py-3 text-sm font-medium border-b-2 whitespace-nowrap ${activeTab === "profile"
                     ? "border-blue-500 text-blue-600"
                     : "border-transparent text-gray-500 hover:text-gray-700"
-                }`}
+                  }`}
               >
                 Profile Management
               </button>
@@ -154,30 +174,61 @@ const FreelancerDashboard: React.FC = () => {
 
         {/* Applications Tab */}
         {activeTab === "applications" && (
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {applications.length === 0 ? (
               <div className="bg-white rounded-lg shadow-sm p-8 text-center">
                 <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No applications yet</h3>
-                <p className="text-gray-500">Applications for your services will appear here.</p>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  No applications yet
+                </h3>
+                <p className="text-gray-500">
+                  Applications for your services will appear here.
+                </p>
               </div>
             ) : (
               applications.map((application) => (
-                <div key={application._id} className="bg-white rounded-lg shadow-sm p-6">
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900">{application.clientName}</h3>
-                      <p className="text-gray-600">{application.officialEmail}</p>
-                      <p className="text-gray-600">{application.contactNumber}</p>
-                      <p className="text-sm text-gray-500 mt-1">Applied on {formatDate(application.appliedAt)}</p>
+                <div
+                  key={application._id}
+                  className="bg-white rounded-lg shadow-sm p-4 sm:p-6"
+                >
+                  {/* Top section */}
+                  <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between mb-4">
+                    <div className="min-w-0">
+                      <h3 className="text-lg font-semibold text-gray-900 truncate">
+                        {application.clientName}
+                      </h3>
+
+                      <p className="text-gray-600 break-all text-sm">
+                        {application.officialEmail}
+                      </p>
+
+                      <p className="text-gray-600 text-sm">
+                        {application.contactNumber}
+                      </p>
+
+                      <p className="text-sm text-gray-500 mt-1">
+                        Applied on {formatDate(application.appliedAt)}
+                      </p>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(application.status)}`}>
-                        {application.status.charAt(0).toUpperCase() + application.status.slice(1)}
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                          application.status
+                        )}`}
+                      >
+                        {application.status.charAt(0).toUpperCase() +
+                          application.status.slice(1)}
                       </span>
+
                       <select
                         value={application.status}
-                        onChange={(e) => updateApplicationStatus(application._id, e.target.value)}
+                        onChange={(e) =>
+                          updateApplicationStatus(
+                            application._id,
+                            e.target.value
+                          )
+                        }
                         className="px-3 py-1 border border-gray-300 rounded-md text-sm"
                       >
                         <option value="applied">Applied</option>
@@ -189,17 +240,30 @@ const FreelancerDashboard: React.FC = () => {
                     </div>
                   </div>
 
+                  {/* Details */}
                   <div className="grid md:grid-cols-2 gap-6">
+                    {/* Requirements */}
                     <div>
-                      <h4 className="font-medium text-gray-900 mb-2">Requirements</h4>
-                      <p className="text-gray-700 text-sm leading-relaxed">{application.requirements}</p>
+                      <h4 className="font-medium text-gray-900 mb-2">
+                        Requirements
+                      </h4>
+                      <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap break-words max-w-full">
+                        {application.requirements}
+                      </p>
                     </div>
+
+                    {/* Additional Message */}
                     <div>
-                      <h4 className="font-medium text-gray-900 mb-2">Additional Message</h4>
-                      <p className="text-gray-700 text-sm">{application.message || "No additional message"}</p>
+                      <h4 className="font-medium text-gray-900 mb-2">
+                        Additional Message
+                      </h4>
+                      <p className="text-gray-700 text-sm whitespace-pre-wrap break-words max-w-full">
+                        {application.message || "No additional message"}
+                      </p>
                     </div>
                   </div>
 
+                  {/* Resume */}
                   <div className="mt-4 pt-4 border-t border-gray-200">
                     <a
                       href={application.resume}
@@ -224,51 +288,96 @@ const FreelancerDashboard: React.FC = () => {
 
             <div className="grid md:grid-cols-2 gap-6">
               <div>
-                <h3 className="font-medium text-gray-900 mb-3">Basic Information</h3>
+                <h3 className="font-medium text-gray-900 mb-3">
+                  Basic Information
+                </h3>
+
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Name</label>
-                    <p className="text-gray-900">{freelancer.name}</p>
+                    <label className="block text-sm text-gray-700">Name</label>
+                    <p className="text-gray-900 break-words">
+                      {freelancer.name}
+                    </p>
                   </div>
+
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Qualification</label>
-                    <p className="text-gray-900">{freelancer.qualification}</p>
+                    <label className="block text-sm text-gray-700">
+                      Qualification
+                    </label>
+                    <p className="text-gray-900 break-words">
+                      {freelancer.qualification}
+                    </p>
                   </div>
+
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Contact</label>
+                    <label className="block text-sm text-gray-700">
+                      Contact
+                    </label>
                     <p className="text-gray-900">{freelancer.contact}</p>
                   </div>
+
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Email</label>
-                    <p className="text-gray-900">{freelancer.email}</p>
+                    <label className="block text-sm text-gray-700">Email</label>
+                    <p className="text-gray-900 break-all">
+                      {freelancer.email}
+                    </p>
                   </div>
+
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Location</label>
-                    <p className="text-gray-900">{freelancer.location}</p>
+                    <label className="block text-sm text-gray-700">
+                      Location
+                    </label>
+                    <p className="text-gray-900 break-words">
+                      {freelancer.location}
+                    </p>
                   </div>
                 </div>
               </div>
 
               <div>
-                <h3 className="font-medium text-gray-900 mb-3">Service Details</h3>
+                <h3 className="font-medium text-gray-900 mb-3">
+                  Service Details
+                </h3>
+
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Pricing Range</label>
-                    <p className="text-gray-900">₹{freelancer.pricing.min} - ₹{freelancer.pricing.max}</p>
+                    <label className="block text-sm text-gray-700">
+                      Pricing Range
+                    </label>
+                    <p className="text-gray-900">
+                      ₹{freelancer.pricing.min} - ₹{freelancer.pricing.max}
+                    </p>
                   </div>
+
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Expiry Date</label>
-                    <p className="text-gray-900">{formatDate(freelancer.expiryDate)}</p>
+                    <label className="block text-sm text-gray-700">
+                      Expiry Date
+                    </label>
+                    <p className="text-gray-900">
+                      {formatDate(freelancer.expiryDate)}
+                    </p>
                   </div>
+
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Terms Accepted</label>
-                    <p className="text-gray-900">{freelancer.termsAccepted ? "Yes" : "No"}</p>
+                    <label className="block text-sm text-gray-700">
+                      Terms Accepted
+                    </label>
+                    <p className="text-gray-900">
+                      {freelancer.termsAccepted ? "Yes" : "No"}
+                    </p>
                   </div>
+
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Services Offered</label>
+                    <label className="block text-sm text-gray-700">
+                      Services Offered
+                    </label>
+
                     <div className="flex flex-wrap gap-2 mt-1">
                       {freelancer.services.map((service, index) => (
-                        <span key={index} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
+                        <span
+                          key={index}
+                          className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded break-words"
+                        >
                           {service.title}
                         </span>
                       ))}
@@ -281,7 +390,7 @@ const FreelancerDashboard: React.FC = () => {
             <div className="mt-6 pt-6 border-t border-gray-200">
               <button
                 onClick={() => setShowEditModal(true)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
               >
                 Edit Profile
               </button>
