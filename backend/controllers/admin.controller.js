@@ -4,6 +4,7 @@ import Job from "../models/job.model.js";
 import Community from "../models/community.model.js";
 import Notification from "../models/notification.model.js";
 import Post from "../models/post.model.js";
+import Freelancer from "../models/freelancer.model.js";
 import bcrypt from "bcryptjs";
 
 // ====================== USERS ======================
@@ -213,6 +214,20 @@ export const updateJob = async (req, res) => {
   }
 };
 
+export const verifyJob = async (req, res) => {
+  try {
+    const job = await Job.findById(req.params.id);
+    if (!job) return res.status(404).json({ message: "Job not found" });
+
+    job.isVerified = !job.isVerified;
+    await job.save();
+
+    res.json({ message: `Job ${job.isVerified ? 'verified' : 'unverified'}`, job });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 export const deleteJob = async (req, res) => {
   try {
     const job = await Job.findByIdAndDelete(req.params.id);
@@ -314,6 +329,40 @@ export const deletePost = async (req, res) => {
     const post = await Post.findByIdAndDelete(req.params.id);
     if (!post) return res.status(404).json({ message: "Post not found" });
     res.json({ message: "Post deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// ====================== FREELANCERS ======================
+export const getAllFreelancers = async (req, res) => {
+  try {
+    const freelancers = await Freelancer.find().populate("createdBy", "name email");
+    res.json(freelancers);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const verifyFreelancer = async (req, res) => {
+  try {
+    const freelancer = await Freelancer.findById(req.params.id);
+    if (!freelancer) return res.status(404).json({ message: "Freelancer not found" });
+
+    freelancer.isVerified = !freelancer.isVerified;
+    await freelancer.save();
+
+    res.json({ message: `Freelancer ${freelancer.isVerified ? 'verified' : 'unverified'}`, freelancer });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const deleteFreelancer = async (req, res) => {
+  try {
+    const freelancer = await Freelancer.findByIdAndDelete(req.params.id);
+    if (!freelancer) return res.status(404).json({ message: "Freelancer not found" });
+    res.json({ message: "Freelancer deleted successfully" });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

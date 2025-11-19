@@ -6,6 +6,10 @@ import {
   getMyProfile,
   updateMyProfile,
   deleteMyAccount,
+  saveJob,
+  unsaveJob,
+  saveFreelancer,
+  unsaveFreelancer,
 } from "../controllers/user.controller.js";
 import { protect } from "../middlewares/auth.middleware.js";
 import { upload } from "../utils/cloudinary.util.js";
@@ -19,5 +23,11 @@ router.put("/me", protect, upload.single("profilePhoto"), updateMyProfile);
 router.delete("/me", protect, deleteMyAccount);
 // Follow/unfollow other users
 router.post("/:id/follow", protect, toggleFollow);
+// Save/unsave jobs
+router.post("/jobs/:jobId/save", protect, saveJob);
+router.delete("/jobs/:jobId/save", protect, unsaveJob);
+// Save/unsave freelancers
+router.post("/freelancers/:freelancerId/save", protect, saveFreelancer);
+router.delete("/freelancers/:freelancerId/save", protect, unsaveFreelancer);
 
 export default router;

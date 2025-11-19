@@ -36,6 +36,9 @@ const Login = () => {
         navigate("/company/dashboard");
       } else if (decoded.role === "admin") {
         navigate("/dashboard");
+      } else if (decoded.role === "freelancer") {
+        localStorage.setItem("token", data.token);
+        navigate("/freelancer/dashboard");
       } else {
         navigate("/user/dashboard");
       }

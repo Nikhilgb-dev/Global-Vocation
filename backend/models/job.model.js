@@ -4,6 +4,9 @@ const jobSchema = new mongoose.Schema(
   {
     title: String,
     description: String,
+    roleAndResponsibility: String,
+    skillsRequired: String,
+    preferredQualifications: String,
     location: String,
     minSalary: { type: Number },
     maxSalary: { type: Number },
@@ -20,6 +23,7 @@ const jobSchema = new mongoose.Schema(
     },
     expiresAt: { type: Date },
     isExpired: { type: Boolean, default: false },
+    isVerified: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

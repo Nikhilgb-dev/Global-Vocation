@@ -12,6 +12,31 @@ const freelancerApplicationSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    clientName: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    contactNumber: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    officialEmail: {
+      type: String,
+      required: true,
+      trim: true,
+      lowercase: true,
+    },
+    requirements: {
+      type: String,
+      required: true,
+      minlength: [50, "Requirements must be at least 50 words"],
+    },
+    resume: {
+      type: String, // Cloudinary URL
+      required: true,
+    },
     message: {
       type: String,
       trim: true,

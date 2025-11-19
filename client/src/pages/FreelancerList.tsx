@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import API from "../api/api";
-import { Trash2, Edit2, MapPin, Mail, Phone } from "lucide-react";
+import { Trash2, Edit2, MapPin, Mail, Phone, CheckCircle, XCircle, Eye } from "lucide-react";
 import AddFreelancer from "./AddFreelancer";
 import EditFreelancerModal from "@/components/EditFreelancerModal";
 import toast from "react-hot-toast";
@@ -9,6 +9,7 @@ const FreelancerList: React.FC = () => {
     const [freelancers, setFreelancers] = useState<any[]>([]);
     const [showAddModal, setShowAddModal] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
+    const [viewingFreelancer, setViewingFreelancer] = useState<any | null>(null);
 
     const fetchFreelancers = async () => {
         const res = await API.get("/freelancers");
@@ -23,6 +24,14 @@ const FreelancerList: React.FC = () => {
         if (!window.confirm("Are you sure you want to delete this freelancer?")) return;
         await API.delete(`/freelancers/${id}`);
         toast.success("Freelancer deleted!");
+        fetchFreelancers();
+    };
+
+    const handleVerify = async (id: string, currentStatus: boolean) => {
+        const action = currentStatus ? "unverify" : "verify";
+        if (!window.confirm(`Are you sure you want to ${action} this freelancer?`)) return;
+        await API.put(`/admin/freelancers/${id}/verify`);
+        toast.success(`Freelancer ${action}d!`);
         fetchFreelancers();
     };
 
@@ -49,7 +58,15 @@ const FreelancerList: React.FC = () => {
                             alt={freelancer.name}
                             className="w-full h-40 object-cover rounded-xl mb-3"
                         />
-                        <h3 className="text-lg font-bold text-gray-800">{freelancer.name}</h3>
+                        <div className="flex items-center gap-2 mb-1">
+                            <h3 className="text-lg font-bold text-gray-800">{freelancer.name}</h3>
+                            {freelancer.isVerified && (
+                                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20">
+                                    <CheckCircle className="w-3 h-3" />
+                                    Verified
+                                </span>
+                            )}
+                        </div>
                         <p className="text-sm text-gray-500 mb-2">{freelancer.qualification}</p>
                         <div className="text-sm text-gray-600 flex items-center gap-2">
                             <MapPin className="w-4 h-4 text-blue-600" /> {freelancer.location}
@@ -62,16 +79,33 @@ const FreelancerList: React.FC = () => {
                         </div>
                         <p className="mt-3 text-gray-700 line-clamp-3">{freelancer.descriptionOfWork}</p>
 
-                        <div className="flex gap-2 mt-4">
+                        <div className="grid grid-cols-2 gap-2 mt-4">
+                            <button
+                                onClick={() => setViewingFreelancer(freelancer)}
+                                className="flex items-center justify-center gap-2 px-3 py-2 bg-gray-50 text-gray-700 rounded-lg hover:bg-gray-100 text-sm"
+                            >
+                                <Eye className="w-4 h-4" /> View
+                            </button>
+                            <button
+                                onClick={() => handleVerify(freelancer._id, freelancer.isVerified)}
+                                className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm ${
+                                    freelancer.isVerified
+                                        ? "bg-amber-50 text-amber-700 hover:bg-amber-100"
+                                        : "bg-green-50 text-green-700 hover:bg-green-100"
+                                }`}
+                            >
+                                {freelancer.isVerified ? <XCircle className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
+                                {freelancer.isVerified ? "Unverify" : "Verify"}
+                            </button>
                             <button
                                 onClick={() => setEditingId(freelancer._id)}
-                                className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 text-sm"
+                                className="flex items-center justify-center gap-2 px-3 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 text-sm"
                             >
                                 <Edit2 className="w-4 h-4" /> Edit
                             </button>
                             <button
                                 onClick={() => handleDelete(freelancer._id)}
-                                className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 text-sm"
+                                className="flex items-center justify-center gap-2 px-3 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 text-sm"
                             >
                                 <Trash2 className="w-4 h-4" /> Delete
                             </button>
@@ -107,6 +141,127 @@ const FreelancerList: React.FC = () => {
                     onClose={() => setEditingId(null)}
                     onUpdated={fetchFreelancers}
                 />
+            )}
+
+            {/* View Details Modal */}
+            {viewingFreelancer && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-y-auto max-h-[90vh] p-6 relative">
+                        <button
+                            onClick={() => setViewingFreelancer(null)}
+                            className="absolute top-3 right-3 text-gray-600 hover:text-gray-900 text-2xl"
+                        >
+                            ✕
+                        </button>
+
+                        <h2 className="text-2xl font-bold text-gray-800 mb-6">Freelancer Details</h2>
+
+                        <div className="space-y-6">
+                            {/* Basic Info */}
+                            <div className="grid md:grid-cols-2 gap-6">
+                                <div>
+                                    <img
+                                        src={viewingFreelancer.photo || "https://via.placeholder.com/300x200"}
+                                        alt={viewingFreelancer.name}
+                                        className="w-full h-48 object-cover rounded-xl mb-4"
+                                    />
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <h3 className="text-xl font-bold text-gray-800">{viewingFreelancer.name}</h3>
+                                        {viewingFreelancer.isVerified && (
+                                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700">
+                                                <CheckCircle className="w-3 h-3" />
+                                                Verified
+                                            </span>
+                                        )}
+                                    </div>
+                                    <p className="text-gray-600 mb-2">{viewingFreelancer.qualification}</p>
+                                    <div className="text-sm text-gray-600 space-y-1">
+                                        <div className="flex items-center gap-2">
+                                            <MapPin className="w-4 h-4 text-blue-600" /> {viewingFreelancer.location}
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <Mail className="w-4 h-4 text-blue-600" /> {viewingFreelancer.email}
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <Phone className="w-4 h-4 text-blue-600" /> {viewingFreelancer.contact}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <div>
+                                        <h4 className="font-semibold text-gray-800 mb-2">About</h4>
+                                        <p className="text-gray-700">{viewingFreelancer.aboutFreelancer || "No description available"}</p>
+                                    </div>
+                                    <div>
+                                        <h4 className="font-semibold text-gray-800 mb-2">Work Description</h4>
+                                        <p className="text-gray-700">{viewingFreelancer.descriptionOfWork}</p>
+                                    </div>
+                                    <div>
+                                        <h4 className="font-semibold text-gray-800 mb-2">Preferences</h4>
+                                        <div className="flex flex-wrap gap-2">
+                                            {viewingFreelancer.preferences?.map((pref: string, idx: number) => (
+                                                <span key={idx} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
+                                                    {pref}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h4 className="font-semibold text-gray-800 mb-2">Pricing</h4>
+                                        <p className="text-gray-700">
+                                            ₹{viewingFreelancer.pricing?.min} - ₹{viewingFreelancer.pricing?.max}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <h4 className="font-semibold text-gray-800 mb-2">Expiry Date</h4>
+                                        <p className="text-gray-700">
+                                            {new Date(viewingFreelancer.expiryDate).toLocaleDateString('en-US', {
+                                                year: 'numeric',
+                                                month: 'long',
+                                                day: 'numeric'
+                                            })}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Services */}
+                            {viewingFreelancer.services && viewingFreelancer.services.length > 0 && (
+                                <div>
+                                    <h4 className="font-semibold text-gray-800 mb-4">Services Offered</h4>
+                                    <div className="grid md:grid-cols-2 gap-4">
+                                        {viewingFreelancer.services.map((service: any, idx: number) => (
+                                            <div key={idx} className="border border-gray-200 rounded-lg p-4">
+                                                <h5 className="font-medium text-gray-800 mb-2">{service.title}</h5>
+                                                <p className="text-gray-600 text-sm mb-2">{service.description}</p>
+                                                {service.link && (
+                                                    <p className="text-blue-600 text-sm mb-2">
+                                                        <a href={service.link} target="_blank" rel="noopener noreferrer">
+                                                            View Service Link
+                                                        </a>
+                                                    </p>
+                                                )}
+                                                {service.otherDetails && (
+                                                    <p className="text-gray-600 text-sm">{service.otherDetails}</p>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="flex justify-end mt-6">
+                            <button
+                                onClick={() => setViewingFreelancer(null)}
+                                className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );

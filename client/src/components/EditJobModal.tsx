@@ -9,7 +9,7 @@ interface EditJobModalProps {
 }
 
 const EditJobModal: React.FC<EditJobModalProps> = ({ jobId, onClose, onJobUpdated }) => {
-  const [form, setForm] = useState({ title: "", description: "", location: "", minSalary: undefined as number | undefined, maxSalary: undefined as number | undefined, employmentType: "Full-time", expiresAt: "" });
+  const [form, setForm] = useState({ title: "", description: "", roleAndResponsibility: "", skillsRequired: "", preferredQualifications: "", location: "", minSalary: undefined as number | undefined, maxSalary: undefined as number | undefined, employmentType: "Full-time", expiresAt: "" });
 
   useEffect(() => {
     API.get(`/jobs/${jobId}`).then((res) => {
@@ -53,6 +53,9 @@ const EditJobModal: React.FC<EditJobModalProps> = ({ jobId, onClose, onJobUpdate
             <option>Work from home</option>
           </select>
           <textarea name="description" placeholder="Job Description" value={form.description} onChange={handleChange} className="w-full mb-2 p-2 border" />
+          <textarea name="roleAndResponsibility" placeholder="Role and Responsibility" value={form.roleAndResponsibility} onChange={handleChange} className="w-full mb-2 p-2 border" />
+          <textarea name="skillsRequired" placeholder="Skills Required" value={form.skillsRequired} onChange={handleChange} className="w-full mb-2 p-2 border" />
+          <textarea name="preferredQualifications" placeholder="Preferred Qualifications" value={form.preferredQualifications} onChange={handleChange} className="w-full mb-2 p-2 border" />
           <input type="date" name="expiresAt" placeholder="Expiry Date" value={form.expiresAt ? new Date(form.expiresAt).toISOString().split('T')[0] : ""} onChange={handleChange} className="w-full mb-2 p-2 border" />
           <div className="flex justify-end gap-4">
             <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">

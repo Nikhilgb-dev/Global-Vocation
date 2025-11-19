@@ -9,6 +9,7 @@ import {
   getAllJobs,
   updateJob,
   deleteJob,
+  verifyJob,
   createCommunity,
   getAllCommunities,
   updateCommunity,
@@ -20,6 +21,9 @@ import {
   getAllApplications,
   updateApplicationStatus,
   getAdminJobStats,
+  getAllFreelancers,
+  verifyFreelancer,
+  deleteFreelancer,
 } from "../controllers/admin.controller.js";
 import { protect, adminOnly } from "../middlewares/auth.middleware.js";
 import { upload } from "../utils/cloudinary.util.js";
@@ -43,6 +47,7 @@ router.delete("/users/:id", protect, adminOnly, deleteUser);
 router.post("/jobs", protect, adminOnly, createJob);
 router.get("/jobs", protect, adminOnly, getAllJobs);
 router.put("/jobs/:id", protect, adminOnly, updateJob);
+router.put("/jobs/:id/verify", protect, adminOnly, verifyJob);
 router.delete("/jobs/:id", protect, adminOnly, deleteJob);
 router.get("/applications", protect, adminOnly, getAllApplications);
 
@@ -67,5 +72,10 @@ router.post("/posts", protect, adminOnly, createPost);
 router.get("/posts", protect, adminOnly, getAllPosts);
 router.put("/posts/:id", protect, adminOnly, updatePost);
 router.delete("/posts/:id", protect, adminOnly, deletePost);
+
+// FREELANCER CRUD
+router.get("/freelancers", protect, adminOnly, getAllFreelancers);
+router.put("/freelancers/:id/verify", protect, adminOnly, verifyFreelancer);
+router.delete("/freelancers/:id", protect, adminOnly, deleteFreelancer);
 
 export default router;

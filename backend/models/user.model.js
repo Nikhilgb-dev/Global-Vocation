@@ -30,7 +30,7 @@ const userSchema = new mongoose.Schema(
 
     role: {
       type: String,
-      enum: ["user", "company_admin", "admin", "employee"],
+      enum: ["user", "company_admin", "admin", "employee", "freelancer"],
       default: "user",
     },
 
@@ -49,6 +49,11 @@ const userSchema = new mongoose.Schema(
 
     followers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     following: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+
+    savedJobs: [{ type: mongoose.Schema.Types.ObjectId, ref: "Job" }],
+    savedFreelancers: [
+      { type: mongoose.Schema.Types.ObjectId, ref: "Freelancer" },
+    ],
 
     location: { type: String, default: "" },
     website: { type: String, default: "" },

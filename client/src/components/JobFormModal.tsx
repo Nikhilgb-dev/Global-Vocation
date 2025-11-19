@@ -6,13 +6,14 @@ type JobFormProps = {
         _id?: string;
         title?: string;
         description?: string;
+        roleAndResponsibility?: string;
+        skillsRequired?: string;
+        preferredQualifications?: string;
         location?: string;
         employmentType?: string;
         minSalary?: number;
         maxSalary?: number;
         status?: "open" | "closed";
-        responsibilities?: string;
-        qualifications?: string;
     } | null;
     onClose: () => void;
     onCreate: (payload: any) => Promise<void>;
@@ -23,12 +24,13 @@ const JobFormModal: React.FC<JobFormProps> = ({ initialData, onClose, onCreate, 
     const [form, setForm] = useState({
         title: "",
         description: "",
+        roleAndResponsibility: "",
+        skillsRequired: "",
+        preferredQualifications: "",
         location: "",
         employmentType: "Full-time",
         minSalary: undefined as number | undefined,
         maxSalary: undefined as number | undefined,
-        responsibilities: "",
-        qualifications: "",
         status: "open" as "open" | "closed",
     });
     const [submitting, setSubmitting] = useState(false);
@@ -38,12 +40,13 @@ const JobFormModal: React.FC<JobFormProps> = ({ initialData, onClose, onCreate, 
             setForm({
                 title: initialData.title || "",
                 description: initialData.description || "",
+                roleAndResponsibility: initialData.roleAndResponsibility || "",
+                skillsRequired: initialData.skillsRequired || "",
+                preferredQualifications: initialData.preferredQualifications || "",
                 location: initialData.location || "",
                 employmentType: initialData.employmentType || "Full-time",
                 minSalary: initialData.minSalary,
                 maxSalary: initialData.maxSalary,
-                responsibilities: initialData.responsibilities || "",
-                qualifications: initialData.qualifications || "",
                 status: initialData.status || "open",
             });
         }
@@ -133,13 +136,18 @@ const JobFormModal: React.FC<JobFormProps> = ({ initialData, onClose, onCreate, 
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium">Responsibilities</label>
-                        <textarea name="responsibilities" value={form.responsibilities} onChange={handleChange} rows={3} className="w-full px-3 py-2 border rounded-md" />
+                        <label className="block text-sm font-medium">Role and Responsibility</label>
+                        <textarea name="roleAndResponsibility" value={form.roleAndResponsibility} onChange={handleChange} rows={3} className="w-full px-3 py-2 border rounded-md" />
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium">Qualifications</label>
-                        <textarea name="qualifications" value={form.qualifications} onChange={handleChange} rows={2} className="w-full px-3 py-2 border rounded-md" />
+                        <label className="block text-sm font-medium">Skills Required</label>
+                        <textarea name="skillsRequired" value={form.skillsRequired} onChange={handleChange} rows={2} className="w-full px-3 py-2 border rounded-md" />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium">Preferred Qualifications</label>
+                        <textarea name="preferredQualifications" value={form.preferredQualifications} onChange={handleChange} rows={2} className="w-full px-3 py-2 border rounded-md" />
                     </div>
 
                     <div className="flex items-center gap-4 justify-end">

@@ -7,6 +7,9 @@ interface Job {
     _id?: string;
     title: string;
     description?: string;
+    roleAndResponsibility?: string;
+    skillsRequired?: string;
+    preferredQualifications?: string;
     location?: string;
     employmentType?: string;
     minSalary?: number;
@@ -34,6 +37,9 @@ const ManageJobsPage: React.FC = () => {
     const [form, setForm] = useState<Job>({
         title: "",
         description: "",
+        roleAndResponsibility: "",
+        skillsRequired: "",
+        preferredQualifications: "",
         location: "",
         employmentType: "Full-time",
         minSalary: undefined,
@@ -99,6 +105,9 @@ const ManageJobsPage: React.FC = () => {
         setForm({
             title: "",
             description: "",
+            roleAndResponsibility: "",
+            skillsRequired: "",
+            preferredQualifications: "",
             location: "",
             employmentType: "Full-time",
             minSalary: undefined,
@@ -139,6 +148,9 @@ const ManageJobsPage: React.FC = () => {
         setForm({
             title: job.title,
             description: job.description || "",
+            roleAndResponsibility: job.roleAndResponsibility || "",
+            skillsRequired: job.skillsRequired || "",
+            preferredQualifications: job.preferredQualifications || "",
             location: job.location || "",
             employmentType: job.employmentType || "Full-time",
             minSalary: job.minSalary,
@@ -319,6 +331,48 @@ const ManageJobsPage: React.FC = () => {
                                     onChange={handleChange}
                                     className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
                                     rows={6}
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                    Role and Responsibility
+                                </label>
+                                <textarea
+                                    name="roleAndResponsibility"
+                                    placeholder="Detail the role and responsibilities..."
+                                    value={form.roleAndResponsibility}
+                                    onChange={handleChange}
+                                    className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
+                                    rows={4}
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                    Skills Required
+                                </label>
+                                <textarea
+                                    name="skillsRequired"
+                                    placeholder="List the required skills..."
+                                    value={form.skillsRequired}
+                                    onChange={handleChange}
+                                    className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
+                                    rows={3}
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                    Preferred Qualifications
+                                </label>
+                                <textarea
+                                    name="preferredQualifications"
+                                    placeholder="List preferred qualifications..."
+                                    value={form.preferredQualifications}
+                                    onChange={handleChange}
+                                    className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
+                                    rows={3}
                                 />
                             </div>
 

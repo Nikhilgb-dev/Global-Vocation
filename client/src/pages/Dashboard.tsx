@@ -181,6 +181,14 @@ const Dashboard = () => {
     setShowEditJobModal(true);
   };
 
+  const handleVerifyJob = async (jobId: string, currentStatus: boolean) => {
+    const action = currentStatus ? "unverify" : "verify";
+    if (window.confirm(`Are you sure you want to ${action} this job?`)) {
+      await API.put(`/admin/jobs/${jobId}/verify`);
+      fetchJobs();
+    }
+  };
+
 
   const statsData = [
     {
@@ -514,6 +522,9 @@ const Dashboard = () => {
                                   Status
                                 </th>
                                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                  Verified
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                   Expires On
                                 </th>
                                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
@@ -549,6 +560,26 @@ const Dashboard = () => {
                                         {job.status || "open"}
                                       </span>
                                     </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                      <span
+                                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${job.isVerified
+                                          ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20"
+                                          : "bg-amber-50 text-amber-700 ring-1 ring-amber-600/20"
+                                          }`}
+                                      >
+                                        {job.isVerified ? (
+                                          <>
+                                            <CheckCircle className="w-3.5 h-3.5" />
+                                            Verified
+                                          </>
+                                        ) : (
+                                          <>
+                                            <Shield className="w-3.5 h-3.5" />
+                                            Pending
+                                          </>
+                                        )}
+                                      </span>
+                                    </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                                       {(() => {
                                         if (!job.expiresAt) {
@@ -567,6 +598,15 @@ const Dashboard = () => {
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-right">
                                       <div className="flex items-center justify-end gap-1.5">
+                                        <motion.button
+                                          whileHover={{ scale: 1.05 }}
+                                          whileTap={{ scale: 0.95 }}
+                                          onClick={() => handleVerifyJob(job._id, job.isVerified)}
+                                          className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                                          title={job.isVerified ? "Unverify" : "Verify"}
+                                        >
+                                          {job.isVerified ? <XCircle className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
+                                        </motion.button>
                                         <motion.button
                                           whileHover={{ scale: 1.05 }}
                                           whileTap={{ scale: 0.95 }}

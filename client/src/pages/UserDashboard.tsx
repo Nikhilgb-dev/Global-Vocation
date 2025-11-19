@@ -3,6 +3,7 @@ import API from "@/api/api";
 import { motion } from "framer-motion";
 import { CheckCircle, XCircle, Trash2, Eye } from "lucide-react";
 import JobDetailsModal from "@/components/JobDetailsModal";
+import FreelancerApplicationDetailsModal from "@/components/FreelancerApplicationDetailsModal";
 import FeedbackButton from "@/components/FeedbackButton";
 
 const StatCard = ({ title, value }: { title: string; value: number }) => (
@@ -14,15 +15,22 @@ const StatCard = ({ title, value }: { title: string; value: number }) => (
 
 const UserDashboard = () => {
     const [applications, setApplications] = useState<any[]>([]);
+    const [freelancerApplications, setFreelancerApplications] = useState<any[]>([]);
     const [notifications, setNotifications] = useState<any[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [loading, setLoading] = useState(true);
     const [showNotifications, setShowNotifications] = useState(false);
     const [selectedJob, setSelectedJob] = useState<any | null>(null);
+    const [selectedFreelancerApplication, setSelectedFreelancerApplication] = useState<any | null>(null);
 
     const fetchApplications = async () => {
         const res = await API.get("/applications/me");
         setApplications(res.data.applications);
+    };
+
+    const fetchFreelancerApplications = async () => {
+        const res = await API.get("/freelancers/me/applications");
+        setFreelancerApplications(res.data);
     };
 
     const fetchNotifications = async () => {
@@ -40,7 +48,7 @@ const UserDashboard = () => {
     useEffect(() => {
         const load = async () => {
             setLoading(true);
-            await Promise.all([fetchApplications(), fetchNotifications()]);
+            await Promise.all([fetchApplications(), fetchFreelancerApplications(), fetchNotifications()]);
             setLoading(false);
         };
         load();
@@ -49,7 +57,9 @@ const UserDashboard = () => {
     if (loading) return <div className="text-gray-500 p-6">Loading...</div>;
 
     const stats = {
-        total: applications.length,
+        jobApplications: applications.length,
+        freelancerApplications: freelancerApplications.length,
+        totalApplications: applications.length + freelancerApplications.length,
         hired: applications.filter((a) => a.status === "hired").length,
         interview: applications.filter((a) => a.status === "interview").length,
         rejected: applications.filter((a) => a.status === "rejected").length,
@@ -64,10 +74,10 @@ const UserDashboard = () => {
 
             {/* Stats */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <StatCard title="Jobs Applied" value={stats.total} />
-                <StatCard title="Interviews" value={stats.interview} />
+                <StatCard title="Total Applications" value={stats.totalApplications} />
+                <StatCard title="Job Applications" value={stats.jobApplications} />
+                <StatCard title="Freelancer Applications" value={stats.freelancerApplications} />
                 <StatCard title="Hired" value={stats.hired} />
-                <StatCard title="Rejected" value={stats.rejected} />
             </div>
 
             {/* Applications */}
@@ -128,8 +138,67 @@ const UserDashboard = () => {
                 )}
             </div>
 
+            {/* Freelancer Applications */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                <h2 className="text-lg font-semibold mb-4">My Freelancer Applications</h2>
+                {freelancerApplications.length === 0 ? (
+                    <div className="text-gray-500">You haven't applied to any freelancer services yet.</div>
+                ) : (
+                    <table className="w-full text-sm">
+                        <thead className="bg-gray-50 text-gray-600 border-b">
+                            <tr>
+                                <th className="p-2 text-left">Freelancer</th>
+                                <th className="p-2 text-left">Service</th>
+                                <th className="p-2 text-left">Status</th>
+                                <th className="p-2 text-left">Applied On</th>
+                                <th className="p-2 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {freelancerApplications.map((a) => (
+                                <motion.tr
+                                    key={a._id}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="border-b hover:bg-gray-50"
+                                >
+                                    <td className="p-2">{a.freelancer?.name}</td>
+                                    <td className="p-2">{a.freelancer?.qualification}</td>
+                                    <td className="p-2 capitalize">
+                                        {a.status === "hired" ? (
+                                            <CheckCircle className="w-4 h-4 text-green-600 inline-block mr-1" />
+                                        ) : a.status === "rejected" ? (
+                                            <XCircle className="w-4 h-4 text-red-600 inline-block mr-1" />
+                                        ) : null}
+                                        {a.status}
+                                    </td>
+                                    <td className="p-2 text-gray-500">
+                                        {new Date(a.appliedAt).toLocaleDateString()}
+                                    </td>
+                                    <td className="p-2 text-right">
+                                        <button
+                                            onClick={() => setSelectedFreelancerApplication(a)}
+                                            className="text-blue-600 hover:underline text-sm"
+                                        >
+                                            <Eye className="w-4 h-4 inline-block mr-1" /> View Details
+                                        </button>
+                                    </td>
+                                </motion.tr>
+                            ))}
+                        </tbody>
+                    </table>
+                )}
+            </div>
+
             {selectedJob && (
                 <JobDetailsModal job={selectedJob} onClose={() => setSelectedJob(null)} />
+            )}
+
+            {selectedFreelancerApplication && (
+                <FreelancerApplicationDetailsModal
+                    application={selectedFreelancerApplication}
+                    onClose={() => setSelectedFreelancerApplication(null)}
+                />
             )}
 
             <FeedbackButton targetType="platform" />

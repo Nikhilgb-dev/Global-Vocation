@@ -12,14 +12,16 @@ interface Service {
 
 interface AddFreelancerProps {
     onAdded?: () => void;
+    onClose?: () => void;
     isPublic?: boolean;
 }
 
-const AddFreelancer: React.FC<AddFreelancerProps> = ({ onAdded, isPublic = false }) => {
+const AddFreelancer: React.FC<AddFreelancerProps> = ({ onAdded, onClose, isPublic = false }) => {
     const [name, setName] = useState("");
     const [qualification, setQualification] = useState("");
     const [contact, setContact] = useState("");
     const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
     const [location, setLocation] = useState("");
     const [preferences, setPreferences] = useState<string[]>([]);
     const [descriptionOfWork, setDescriptionOfWork] = useState("");
@@ -56,7 +58,7 @@ const AddFreelancer: React.FC<AddFreelancerProps> = ({ onAdded, isPublic = false
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!name || !qualification || !email || !descriptionOfWork) {
+        if (!name || !qualification || !email || !password || !descriptionOfWork) {
             toast.error("Please fill all required fields");
             return;
         }
@@ -74,6 +76,7 @@ const AddFreelancer: React.FC<AddFreelancerProps> = ({ onAdded, isPublic = false
             formData.append("qualification", qualification);
             formData.append("contact", contact);
             formData.append("email", email);
+            formData.append("password", password);
             formData.append("location", location);
             formData.append("preferences", JSON.stringify(preferences));
             formData.append("descriptionOfWork", descriptionOfWork);
@@ -95,6 +98,7 @@ const AddFreelancer: React.FC<AddFreelancerProps> = ({ onAdded, isPublic = false
             setQualification("");
             setContact("");
             setEmail("");
+            setPassword("");
             setLocation("");
             setPreferences([]);
             setDescriptionOfWork("");
@@ -109,15 +113,32 @@ const AddFreelancer: React.FC<AddFreelancerProps> = ({ onAdded, isPublic = false
         }
     };
 
+    const handleClickOutside = (e: React.MouseEvent<HTMLDivElement>) => {
+        if (e.target === e.currentTarget && onClose) {
+            onClose();
+        }
+    };
+
     return (
-        <div className="bg-white shadow-md rounded-2xl p-6 max-w-4xl mx-auto">
-            <h2 className="text-2xl font-bold mb-6 text-gray-800">Add Freelancer</h2>
-            <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-start z-50 overflow-auto py-10" onClick={handleClickOutside}>
+            <div className="bg-white shadow-md rounded-2xl p-6 max-w-4xl mx-auto relative">
+                <button
+                    onClick={onClose}
+                    className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full p-2 transition-all"
+                    type="button"
+                >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+                <h2 className="text-2xl font-bold mb-6 text-gray-800">Add Freelancer</h2>
+                <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid md:grid-cols-2 gap-4">
                     <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" className="input" />
                     <input type="text" value={qualification} onChange={(e) => setQualification(e.target.value)} placeholder="Qualification" className="input" />
                     <input type="text" value={contact} onChange={(e) => setContact(e.target.value)} placeholder="Contact" className="input" />
                     <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" className="input" />
+                    <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" className="input" />
                     <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Location" className="input" />
                 </div>
 
@@ -178,10 +199,14 @@ const AddFreelancer: React.FC<AddFreelancerProps> = ({ onAdded, isPublic = false
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                    Min-Price
-                    <input type="number" placeholder="Starting Price" value={pricing.min} onChange={(e) => setPricing({ ...pricing, min: e.target.value })} className="input" />
-                    Max-Price
-                    <input type="number" placeholder="Max Price" value={pricing.max} onChange={(e) => setPricing({ ...pricing, max: e.target.value })} className="input" />
+                    <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Starting Service Price</label>
+                        <input type="number" placeholder="Starting Price" value={pricing.min} onChange={(e) => setPricing({ ...pricing, min: e.target.value })} className="input" />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Maximum Service Price</label>
+                        <input type="number" placeholder="Max Price" value={pricing.max} onChange={(e) => setPricing({ ...pricing, max: e.target.value })} className="input" />
+                    </div>
                 </div>
 
                 <button
@@ -191,7 +216,8 @@ const AddFreelancer: React.FC<AddFreelancerProps> = ({ onAdded, isPublic = false
                 >
                     {loading ? "Submitting..." : "Submit Freelancer"}
                 </button>
-            </form>
+                </form>
+            </div>
         </div>
     );
 };

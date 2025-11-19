@@ -179,3 +179,81 @@ export const toggleFollow = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+// ========== SAVE / UNSAVE JOB ==========
+export const saveJob = async (req, res) => {
+  try {
+    const jobId = req.params.jobId;
+    const userId = req.user._id;
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    if (user.savedJobs.includes(jobId)) {
+      return res.status(400).json({ message: "Job already saved" });
+    }
+
+    user.savedJobs.push(jobId);
+    await user.save();
+
+    res.json({ message: "Job saved successfully" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const unsaveJob = async (req, res) => {
+  try {
+    const jobId = req.params.jobId;
+    const userId = req.user._id;
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    user.savedJobs = user.savedJobs.filter(id => id.toString() !== jobId);
+    await user.save();
+
+    res.json({ message: "Job unsaved successfully" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// ========== SAVE / UNSAVE FREELANCER ==========
+export const saveFreelancer = async (req, res) => {
+  try {
+    const freelancerId = req.params.freelancerId;
+    const userId = req.user._id;
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    if (user.savedFreelancers.includes(freelancerId)) {
+      return res.status(400).json({ message: "Freelancer already saved" });
+    }
+
+    user.savedFreelancers.push(freelancerId);
+    await user.save();
+
+    res.json({ message: "Freelancer saved successfully" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const unsaveFreelancer = async (req, res) => {
+  try {
+    const freelancerId = req.params.freelancerId;
+    const userId = req.user._id;
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    user.savedFreelancers = user.savedFreelancers.filter(id => id.toString() !== freelancerId);
+    await user.save();
+
+    res.json({ message: "Freelancer unsaved successfully" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};

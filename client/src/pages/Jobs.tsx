@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import API from "../api/api";
 import ApplyModal from "../components/ApplyModal";
 import JobDetailsModal from "./JobDetailsModal";
+import { Bookmark, Share2 } from "lucide-react";
+import toast from "react-hot-toast";
 
 const Jobs = () => {
   const [jobs, setJobs] = useState<any[]>([]);
@@ -11,6 +13,8 @@ const Jobs = () => {
   const [loading, setLoading] = useState(true);
   const [showDetails, setShowDetails] = useState(false);
   const [selectedJob, setSelectedJob] = useState<string | null>(null);
+  const [user, setUser] = useState<any>(null);
+  const [savedJobs, setSavedJobs] = useState<string[]>([]);
 
   useEffect(() => {
     setLoading(true);
@@ -20,11 +24,58 @@ const Jobs = () => {
         setLoading(false);
       })
       .catch(() => setLoading(false));
+
+    // Fetch user and saved jobs
+    const token = localStorage.getItem("token");
+    if (token) {
+      API.get("/users/me")
+        .then((res) => {
+          setUser(res.data);
+          setSavedJobs(res.data.savedJobs?.map((j: any) => j._id || j) || []);
+        })
+        .catch(() => setUser(null));
+    }
   }, []);
 
   const handleApply = (jobId: string) => {
     setSelectedJobId(jobId);
     setShowModal(true);
+  };
+
+  const handleSave = async (jobId: string) => {
+    if (!user) {
+      toast.error("Please login to save jobs");
+      return;
+    }
+    try {
+      if (savedJobs.includes(jobId)) {
+        await API.delete(`/users/jobs/${jobId}/save`);
+        setSavedJobs(savedJobs.filter(id => id !== jobId));
+        toast.success("Job unsaved");
+      } else {
+        await API.post(`/users/jobs/${jobId}/save`);
+        setSavedJobs([...savedJobs, jobId]);
+        toast.success("Job saved");
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to save job");
+    }
+  };
+
+  const handleShare = (job: any) => {
+    const url = `${window.location.origin}/jobs/${job._id}`;
+    const text = `Check out this job: ${job.title} at ${job.company?.name || "Company"}`;
+
+    if (navigator.share) {
+      navigator.share({
+        title: job.title,
+        text,
+        url,
+      });
+    } else {
+      navigator.clipboard.writeText(`${text} ${url}`);
+      toast.success("Link copied to clipboard");
+    }
   };
 
   const filtered = jobs.filter(
@@ -171,7 +222,37 @@ const Jobs = () => {
                 }}
                 className="cursor-pointer bg-white rounded-xl sm:rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100 overflow-hidden group flex flex-col justify-between"
               >
-                <div className="p-5 sm:p-6 flex-1 flex flex-col">
+                <div className="p-5 sm:p-6 flex-1 flex flex-col relative">
+                  {/* Save and Share Buttons - Top Right */}
+                  {user && (
+                    <div className="absolute top-4 right-4 flex gap-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSave(job._id);
+                        }}
+                        className={`p-2 rounded-lg text-sm font-semibold transition-all ${
+                          savedJobs.includes(job._id)
+                            ? "bg-blue-600 text-white"
+                            : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                        }`}
+                        title={savedJobs.includes(job._id) ? "Unsave" : "Save"}
+                      >
+                        <Bookmark className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleShare(job);
+                        }}
+                        className="p-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-300 transition-all"
+                        title="Share"
+                      >
+                        <Share2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+
                   {/* Company Info */}
                   {job.company && (
                     <div className="flex items-center gap-3 mb-3">
@@ -198,9 +279,19 @@ const Jobs = () => {
                   )}
 
                   {/* Title */}
-                  <h3 className="text-lg sm:text-2xl font-bold text-gray-800 mb-2 sm:mb-3 group-hover:text-green-600 transition-colors line-clamp-1">
-                    {job.title}
-                  </h3>
+                  <div className="flex items-center gap-2 mb-2 sm:mb-3">
+                    <h3 className="text-lg sm:text-2xl font-bold text-gray-800 group-hover:text-green-600 transition-colors line-clamp-1">
+                      {job.title}
+                    </h3>
+                    {job.isVerified && (
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Verified
+                      </span>
+                    )}
+                  </div>
 
                   {/* Badges */}
                   <div className="flex flex-wrap gap-2 mb-3 sm:mb-4">

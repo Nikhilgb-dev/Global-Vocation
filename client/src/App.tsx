@@ -40,6 +40,7 @@ import FreelancerList from "./pages/FreelancerList";
 import Freelancers from "./pages/Freelancers";
 import AddFreelancer from "./pages/AddFreelancer";
 import FreelancerRegister from "./pages/FreelancerRegister";
+import FreelancerDashboard from "./pages/FreelancerDashboard";
 
 export default function App() {
   return (
@@ -71,6 +72,7 @@ export default function App() {
               />
 
               <Route path="/user/dashboard" element={<UserDashboard />} />
+              <Route path="/freelancer/dashboard" element={<FreelancerDashboard />} />
 
               <Route path="/dashboard/feedback" element={<UserFeedbackPage />} />
               <Route
