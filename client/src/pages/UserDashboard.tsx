@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+// UserDashboard.tsx
+import { useEffect, useMemo, useState, useCallback } from "react";
 import API from "@/api/api";
 import { motion } from "framer-motion";
 import { CheckCircle, XCircle, Trash2, Eye } from "lucide-react";
@@ -6,44 +7,154 @@ import JobDetailsModal from "@/components/JobDetailsModal";
 import FreelancerApplicationDetailsModal from "@/components/FreelancerApplicationDetailsModal";
 import FeedbackButton from "@/components/FeedbackButton";
 
+type AnyObj = Record<string, any>;
+
 const StatCard = ({ title, value }: { title: string; value: number }) => (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-        <p className="text-sm text-gray-500">{title}</p>
-        <h3 className="text-2xl font-bold text-gray-900">{value}</h3>
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-5">
+        <p className="text-xs sm:text-sm text-gray-500">{title}</p>
+        <h3 className="text-xl sm:text-2xl font-bold text-gray-900">{value}</h3>
     </div>
 );
 
-const UserDashboard = () => {
-    const [applications, setApplications] = useState<any[]>([]);
-    const [freelancerApplications, setFreelancerApplications] = useState<any[]>([]);
-    const [notifications, setNotifications] = useState<any[]>([]);
-    const [unreadCount, setUnreadCount] = useState(0);
+/** Small utility to render readable date consistently */
+const formatDate = (d?: string | number) => {
+    if (!d) return "-";
+    try {
+        return new Date(d).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+    } catch {
+        return "-";
+    }
+};
+
+const EmptyState = ({ message }: { message: string }) => (
+    <div className="text-gray-500 py-6 text-center">{message}</div>
+);
+
+/** Mobile card for job application */
+const JobAppCard = ({ a, onView, onWithdraw }: { a: AnyObj; onView: (j: AnyObj) => void; onWithdraw: (id: string) => void }) => (
+    <motion.div
+        layout
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white rounded-lg p-4 shadow-sm border border-gray-100"
+    >
+        <div className="flex justify-between items-start gap-3">
+            <div>
+                <div className="text-sm font-semibold text-gray-900">{a.job?.title || "—"}</div>
+                <div className="text-xs text-gray-500">{a.job?.company?.name || "—"}</div>
+            </div>
+
+            <div className="text-right">
+                <div className="text-xs text-gray-500">{formatDate(a.createdAt || a.appliedAt)}</div>
+                <div className="mt-2">
+                    <span
+                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${a.status === "hired"
+                                ? "bg-green-100 text-green-800"
+                                : a.status === "rejected"
+                                    ? "bg-red-100 text-red-800"
+                                    : "bg-gray-100 text-gray-800"
+                            }`}
+                    >
+                        {a.status || "applied"}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div className="mt-3 flex gap-2">
+            <button
+                onClick={() => onView(a.job)}
+                aria-label={`View job ${a.job?.title || ""}`}
+                className="flex-1 text-sm px-3 py-2 rounded-md border border-blue-600 text-blue-600 hover:bg-blue-50 transition"
+            >
+                <Eye className="w-4 h-4 inline-block mr-2" /> View
+            </button>
+            <button
+                onClick={() => onWithdraw(a._id)}
+                aria-label="Withdraw application"
+                className="text-sm px-3 py-2 rounded-md border border-red-600 text-red-600 hover:bg-red-50 transition"
+            >
+                <Trash2 className="w-4 h-4 inline-block mr-2" /> Withdraw
+            </button>
+        </div>
+    </motion.div>
+);
+
+/** Mobile card for freelancer application */
+const FreelancerAppCard = ({ a, onView, onWithdraw }: { a: AnyObj; onView: (app: AnyObj) => void; onWithdraw: (id: string) => void }) => (
+    <motion.div
+        layout
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white rounded-lg p-4 shadow-sm border border-gray-100"
+    >
+        <div className="flex justify-between items-start gap-3">
+            <div>
+                <div className="text-sm font-semibold text-gray-900">{a.freelancer?.name || "—"}</div>
+                <div className="text-xs text-gray-500">{a.freelancer?.qualification || a.serviceTitle || "—"}</div>
+            </div>
+
+            <div className="text-right">
+                <div className="text-xs text-gray-500">{formatDate(a.appliedAt || a.createdAt)}</div>
+                <div className="mt-2">
+                    <span
+                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${a.status === "hired"
+                                ? "bg-green-100 text-green-800"
+                                : a.status === "rejected"
+                                    ? "bg-red-100 text-red-800"
+                                    : "bg-gray-100 text-gray-800"
+                            }`}
+                    >
+                        {a.status || "applied"}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div className="mt-3 flex gap-2">
+            <button
+                onClick={() => onView(a)}
+                aria-label="View freelancer application"
+                className="flex-1 text-sm px-3 py-2 rounded-md border border-blue-600 text-blue-600 hover:bg-blue-50 transition"
+            >
+                <Eye className="w-4 h-4 inline-block mr-2" /> View
+            </button>
+            <button
+                onClick={() => onWithdraw(a._id)}
+                aria-label="Withdraw freelancer application"
+                className="text-sm px-3 py-2 rounded-md border border-red-600 text-red-600 hover:bg-red-50 transition"
+            >
+                <Trash2 className="w-4 h-4 inline-block mr-2" /> Withdraw
+            </button>
+        </div>
+    </motion.div>
+);
+
+const UserDashboard: React.FC = () => {
+    const [applications, setApplications] = useState<AnyObj[]>([]);
+    const [freelancerApplications, setFreelancerApplications] = useState<AnyObj[]>([]);
+    const [notifications, setNotifications] = useState<AnyObj[]>([]);
     const [loading, setLoading] = useState(true);
-    const [showNotifications, setShowNotifications] = useState(false);
-    const [selectedJob, setSelectedJob] = useState<any | null>(null);
-    const [selectedFreelancerApplication, setSelectedFreelancerApplication] = useState<any | null>(null);
+    const [selectedJob, setSelectedJob] = useState<AnyObj | null>(null);
+    const [selectedFreelancerApplication, setSelectedFreelancerApplication] = useState<AnyObj | null>(null);
 
-    const fetchApplications = async () => {
+    // Fetchers
+    const fetchApplications = useCallback(async () => {
         const res = await API.get("/applications/me");
-        setApplications(res.data.applications);
-    };
+        // defensive: handle possible shapes
+        const apps = res.data?.applications ?? res.data ?? [];
+        setApplications(Array.isArray(apps) ? apps : []);
+    }, []);
 
-    const fetchFreelancerApplications = async () => {
+    const fetchFreelancerApplications = useCallback(async () => {
         const res = await API.get("/freelancers/me/applications");
-        setFreelancerApplications(res.data);
-    };
+        setFreelancerApplications(Array.isArray(res.data) ? res.data : res.data?.applications ?? []);
+    }, []);
 
-    const fetchNotifications = async () => {
+    const fetchNotifications = useCallback(async () => {
         const res = await API.get("/notifications");
-        setNotifications(res.data);
-        setUnreadCount(res.data.filter((n: any) => !n.isRead).length);
-    };
-
-    const withdrawApplication = async (id: string) => {
-        if (!window.confirm("Withdraw this application?")) return;
-        await API.delete(`/applications/${id}`);
-        fetchApplications();
-    };
+        setNotifications(Array.isArray(res.data) ? res.data : res.data?.notifications ?? []);
+    }, []);
 
     useEffect(() => {
         const load = async () => {
@@ -52,158 +163,176 @@ const UserDashboard = () => {
             setLoading(false);
         };
         load();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    const withdrawApplication = async (id: string) => {
+        if (!window.confirm("Withdraw this application?")) return;
+        await API.delete(`/applications/${id}`);
+        await fetchApplications();
+    };
+
+    const withdrawFreelancerApplication = async (id: string) => {
+        if (!window.confirm("Withdraw this freelancer application?")) return;
+        await API.delete(`/freelancers/applications/${id}`);
+        await fetchFreelancerApplications();
+    };
+
+    // memoized stats so re-renders don't recompute
+    const stats = useMemo(() => {
+        const jobApplications = applications.length;
+        const freelanceApps = freelancerApplications.length;
+        const totalApplications = jobApplications + freelanceApps;
+        const hired = (applications.filter((a) => a.status === "hired") || []).length;
+        const interview = (applications.filter((a) => a.status === "interview") || []).length;
+        const rejected = (applications.filter((a) => a.status === "rejected") || []).length;
+        return { jobApplications, freelanceApps, totalApplications, hired, interview, rejected };
+    }, [applications, freelancerApplications]);
 
     if (loading) return <div className="text-gray-500 p-6">Loading...</div>;
 
-    const stats = {
-        jobApplications: applications.length,
-        freelancerApplications: freelancerApplications.length,
-        totalApplications: applications.length + freelancerApplications.length,
-        hired: applications.filter((a) => a.status === "hired").length,
-        interview: applications.filter((a) => a.status === "interview").length,
-        rejected: applications.filter((a) => a.status === "rejected").length,
-    };
-
     return (
-        <div className="p-6 space-y-6">
+        <div className="p-4 sm:p-6 space-y-6">
             {/* Header */}
-            <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold text-gray-900">My Dashboard</h1>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">My Dashboard</h1>
             </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Stats grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                 <StatCard title="Total Applications" value={stats.totalApplications} />
                 <StatCard title="Job Applications" value={stats.jobApplications} />
-                <StatCard title="Freelancer Applications" value={stats.freelancerApplications} />
+                <StatCard title="Freelancer Applications" value={stats.freelanceApps} />
                 <StatCard title="Hired" value={stats.hired} />
             </div>
 
-            {/* Applications */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            {/* Applications block */}
+            <section className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6">
                 <h2 className="text-lg font-semibold mb-4">My Applications</h2>
-                {applications.length === 0 ? (
-                    <div className="text-gray-500">You haven’t applied to any jobs yet.</div>
-                ) : (
-                    <table className="w-full text-sm">
-                        <thead className="bg-gray-50 text-gray-600 border-b">
-                            <tr>
-                                <th className="p-2 text-left">Job Title</th>
-                                <th className="p-2 text-left">Company</th>
-                                <th className="p-2 text-left">Status</th>
-                                <th className="p-2 text-left">Applied On</th>
-                                <th className="p-2 text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {applications.map((a) => (
-                                <motion.tr
-                                    key={a._id}
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    className="border-b hover:bg-gray-50"
-                                >
-                                    <td className="p-2">{a.job?.title}</td>
-                                    <td className="p-2">{a.job?.company?.name}</td>
-                                    <td className="p-2 capitalize">
-                                        {a.status === "hired" ? (
-                                            <CheckCircle className="w-4 h-4 text-green-600 inline-block mr-1" />
-                                        ) : a.status === "rejected" ? (
-                                            <XCircle className="w-4 h-4 text-red-600 inline-block mr-1" />
-                                        ) : null}
-                                        {a.status}
-                                    </td>
-                                    <td className="p-2 text-gray-500">
-                                        {new Date(a.createdAt).toLocaleDateString()}
-                                    </td>
-                                    <td className="p-2 text-right space-x-3">
-                                        <button
-                                            onClick={() => setSelectedJob(a.job)}
-                                            className="text-blue-600 hover:underline text-sm"
-                                        >
-                                            <Eye className="w-4 h-4 inline-block mr-1" /> View
-                                        </button>
-                                        <button
-                                            onClick={() => withdrawApplication(a._id)}
-                                            className="text-red-600 hover:underline text-sm"
-                                        >
-                                            <Trash2 className="w-4 h-4 inline-block mr-1" /> Withdraw
-                                        </button>
-                                    </td>
-                                </motion.tr>
-                            ))}
-                        </tbody>
-                    </table>
-                )}
-            </div>
 
-            {/* Freelancer Applications */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                {/* MOBILE: card list */}
+                <div className="space-y-3 md:hidden">
+                    {applications.length === 0 ? (
+                        <EmptyState message="You haven’t applied to any jobs yet." />
+                    ) : (
+                        applications.map((a) => (
+                            <JobAppCard key={a._id} a={a} onView={(j) => setSelectedJob(j)} onWithdraw={withdrawApplication} />
+                        ))
+                    )}
+                </div>
+
+                {/* DESKTOP / TABLET: table view */}
+                <div className="hidden md:block overflow-x-auto">
+                    {applications.length === 0 ? (
+                        <EmptyState message="You haven’t applied to any jobs yet." />
+                    ) : (
+                        <table className="w-full text-sm">
+                            <thead className="bg-gray-50 text-gray-600 border-b">
+                                <tr>
+                                    <th className="p-3 text-left">Job Title</th>
+                                    <th className="p-3 text-left">Company</th>
+                                    <th className="p-3 text-left">Status</th>
+                                    <th className="p-3 text-left">Applied On</th>
+                                    <th className="p-3 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {applications.map((a) => (
+                                    <tr key={a._id} className="border-b hover:bg-gray-50">
+                                        <td className="p-3">{a.job?.title || "—"}</td>
+                                        <td className="p-3">{a.job?.company?.name || "—"}</td>
+                                        <td className="p-3 capitalize">
+                                            {a.status === "hired" ? (
+                                                <CheckCircle className="w-4 h-4 text-green-600 inline-block mr-1" />
+                                            ) : a.status === "rejected" ? (
+                                                <XCircle className="w-4 h-4 text-red-600 inline-block mr-1" />
+                                            ) : null}
+                                            {a.status || "applied"}
+                                        </td>
+                                        <td className="p-3 text-gray-500">{formatDate(a.createdAt || a.appliedAt)}</td>
+                                        <td className="p-3 text-right space-x-3">
+                                            <button onClick={() => setSelectedJob(a.job)} className="text-blue-600 hover:underline text-sm inline-flex items-center">
+                                                <Eye className="w-4 h-4 inline-block mr-1" /> View
+                                            </button>
+                                            <button onClick={() => withdrawApplication(a._id)} className="text-red-600 hover:underline text-sm inline-flex items-center">
+                                                <Trash2 className="w-4 h-4 inline-block mr-1" /> Withdraw
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    )}
+                </div>
+            </section>
+
+            {/* Freelancer Applications block */}
+            <section className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6">
                 <h2 className="text-lg font-semibold mb-4">My Freelancer Applications</h2>
-                {freelancerApplications.length === 0 ? (
-                    <div className="text-gray-500">You haven't applied to any freelancer services yet.</div>
-                ) : (
-                    <table className="w-full text-sm">
-                        <thead className="bg-gray-50 text-gray-600 border-b">
-                            <tr>
-                                <th className="p-2 text-left">Freelancer</th>
-                                <th className="p-2 text-left">Service</th>
-                                <th className="p-2 text-left">Status</th>
-                                <th className="p-2 text-left">Applied On</th>
-                                <th className="p-2 text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {freelancerApplications.map((a) => (
-                                <motion.tr
-                                    key={a._id}
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    className="border-b hover:bg-gray-50"
-                                >
-                                    <td className="p-2">{a.freelancer?.name}</td>
-                                    <td className="p-2">{a.freelancer?.qualification}</td>
-                                    <td className="p-2 capitalize">
-                                        {a.status === "hired" ? (
-                                            <CheckCircle className="w-4 h-4 text-green-600 inline-block mr-1" />
-                                        ) : a.status === "rejected" ? (
-                                            <XCircle className="w-4 h-4 text-red-600 inline-block mr-1" />
-                                        ) : null}
-                                        {a.status}
-                                    </td>
-                                    <td className="p-2 text-gray-500">
-                                        {new Date(a.appliedAt).toLocaleDateString()}
-                                    </td>
-                                    <td className="p-2 text-right">
-                                        <button
-                                            onClick={() => setSelectedFreelancerApplication(a)}
-                                            className="text-blue-600 hover:underline text-sm"
-                                        >
-                                            <Eye className="w-4 h-4 inline-block mr-1" /> View Details
-                                        </button>
-                                    </td>
-                                </motion.tr>
-                            ))}
-                        </tbody>
-                    </table>
-                )}
-            </div>
 
-            {selectedJob && (
-                <JobDetailsModal job={selectedJob} onClose={() => setSelectedJob(null)} />
-            )}
+                {/* MOBILE */}
+                <div className="space-y-3 md:hidden">
+                    {freelancerApplications.length === 0 ? (
+                        <EmptyState message="You haven't applied to any freelancer services yet." />
+                    ) : (
+                        freelancerApplications.map((a) => (
+                            <FreelancerAppCard key={a._id} a={a} onView={(app) => setSelectedFreelancerApplication(app)} onWithdraw={withdrawFreelancerApplication} />
+                        ))
+                    )}
+                </div>
+
+                {/* DESKTOP / TABLET */}
+                <div className="hidden md:block overflow-x-auto">
+                    {freelancerApplications.length === 0 ? (
+                        <EmptyState message="You haven't applied to any freelancer services yet." />
+                    ) : (
+                        <table className="w-full text-sm">
+                            <thead className="bg-gray-50 text-gray-600 border-b">
+                                <tr>
+                                    <th className="p-3 text-left">Freelancer</th>
+                                    <th className="p-3 text-left">Service</th>
+                                    <th className="p-3 text-left">Status</th>
+                                    <th className="p-3 text-left">Applied On</th>
+                                    <th className="p-3 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {freelancerApplications.map((a) => (
+                                    <tr key={a._id} className="border-b hover:bg-gray-50">
+                                        <td className="p-3">{a.freelancer?.name || "—"}</td>
+                                        <td className="p-3">{a.freelancer?.qualification || a.serviceTitle || "—"}</td>
+                                        <td className="p-3 capitalize">
+                                            {a.status === "hired" ? (
+                                                <CheckCircle className="w-4 h-4 text-green-600 inline-block mr-1" />
+                                            ) : a.status === "rejected" ? (
+                                                <XCircle className="w-4 h-4 text-red-600 inline-block mr-1" />
+                                            ) : null}
+                                            {a.status || "applied"}
+                                        </td>
+                                        <td className="p-3 text-gray-500">{formatDate(a.appliedAt || a.createdAt)}</td>
+                                        <td className="p-3 text-right space-x-3">
+                                            <button onClick={() => setSelectedFreelancerApplication(a)} className="text-blue-600 hover:underline text-sm inline-flex items-center">
+                                                <Eye className="w-4 h-4 inline-block mr-1" /> View
+                                            </button>
+                                            <button onClick={() => withdrawFreelancerApplication(a._id)} className="text-red-600 hover:underline text-sm inline-flex items-center">
+                                                <Trash2 className="w-4 h-4 inline-block mr-1" /> Withdraw
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    )}
+                </div>
+            </section>
+
+            {selectedJob && <JobDetailsModal job={selectedJob} onClose={() => setSelectedJob(null)} />}
 
             {selectedFreelancerApplication && (
-                <FreelancerApplicationDetailsModal
-                    application={selectedFreelancerApplication}
-                    onClose={() => setSelectedFreelancerApplication(null)}
-                />
+                <FreelancerApplicationDetailsModal application={selectedFreelancerApplication} onClose={() => setSelectedFreelancerApplication(null)} />
             )}
 
             <FeedbackButton targetType="platform" />
-
-
         </div>
     );
 };

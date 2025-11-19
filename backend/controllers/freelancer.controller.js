@@ -304,3 +304,19 @@ export const updateApplicationStatus = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+export const withdrawFreelancerApplication = async (req, res) => {
+  try {
+    const application = await FreelancerApplication.findOneAndDelete({
+      _id: req.params.id,
+      user: req.user._id, // Ensure user can only withdraw their own applications
+    });
+
+    if (!application)
+      return res.status(404).json({ message: "Application not found" });
+
+    res.json({ message: "Application withdrawn successfully" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
