@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import API from "../api/api";
 import { useNavigate, Link } from "react-router-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import TermsModal from "../components/TermsModal";
 
 const Signup = () => {
   const [step, setStep] = useState(1);
@@ -13,8 +14,10 @@ const Signup = () => {
     linkedin: "",
     github: "",
     twitter: "",
+    acceptTerms: false,
   });
   const [profilePhoto, setProfilePhoto] = useState<File | null>(null);
+  const [showTermsModal, setShowTermsModal] = useState(false);
 
   const navigate = useNavigate();
 
@@ -39,6 +42,10 @@ const Signup = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!form.acceptTerms) {
+      toast.error("Please accept the terms and conditions");
+      return;
+    }
     try {
       const formData = new FormData();
       Object.entries(form).forEach(([key, value]) => formData.append(key, value as string));
@@ -153,6 +160,25 @@ const Signup = () => {
               onChange={handleChange}
               className="w-full p-2 border rounded"
             />
+            <div className="flex items-center mt-4">
+              <input
+                type="checkbox"
+                id="acceptTerms"
+                checked={form.acceptTerms}
+                onChange={(e) => setForm({ ...form, acceptTerms: e.target.checked })}
+                className="mr-2"
+              />
+              <label htmlFor="acceptTerms" className="text-sm">
+                I accept the{" "}
+                <button
+                  type="button"
+                  onClick={() => setShowTermsModal(true)}
+                  className="text-brand underline"
+                >
+                  Terms and Conditions
+                </button>
+              </label>
+            </div>
           </div>
         )}
 
@@ -183,7 +209,7 @@ const Signup = () => {
               onClick={handleSubmit}
               className="flex-1 bg-brand text-white py-2 rounded-md font-medium hover:bg-brand-dark transition"
             >
-              Sign Up
+              Register
             </button>
           )}
         </div>
@@ -209,6 +235,7 @@ const Signup = () => {
           </Link>
         </p> */}
       </form>
+      <TermsModal isOpen={showTermsModal} onClose={() => setShowTermsModal(false)} />
     </div>
   );
 };

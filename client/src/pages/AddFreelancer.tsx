@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import API from "../api/api";
 import toast from "react-hot-toast";
+import TermsModal from "../components/TermsModal";
 
 interface Service {
     title: string;
@@ -31,6 +32,8 @@ const AddFreelancer: React.FC<AddFreelancerProps> = ({ onAdded, onClose, isPubli
         { title: "", description: "", link: "", achievements: [""], otherDetails: "" },
     ]);
     const [pricing, setPricing] = useState({ min: "", max: "" });
+    const [acceptTerms, setAcceptTerms] = useState(false);
+    const [showTermsModal, setShowTermsModal] = useState(false);
     const [loading, setLoading] = useState(false);
 
     const preferenceOptions = ["Remote", "On-site", "Contract", "Agreement", "MOU"];
@@ -60,6 +63,11 @@ const AddFreelancer: React.FC<AddFreelancerProps> = ({ onAdded, onClose, isPubli
 
         if (!name || !qualification || !email || !password || !descriptionOfWork) {
             toast.error("Please fill all required fields");
+            return;
+        }
+
+        if (!acceptTerms) {
+            toast.error("Please accept the terms and conditions");
             return;
         }
 
@@ -106,6 +114,7 @@ const AddFreelancer: React.FC<AddFreelancerProps> = ({ onAdded, onClose, isPubli
             setPhoto(null);
             setServices([{ title: "", description: "", link: "", achievements: [""], otherDetails: "" }]);
             setPricing({ min: "", max: "" });
+            setAcceptTerms(false);
         } catch (err: any) {
             toast.error(err.response?.data?.message || "Failed to add freelancer");
         } finally {
@@ -209,6 +218,26 @@ const AddFreelancer: React.FC<AddFreelancerProps> = ({ onAdded, onClose, isPubli
                     </div>
                 </div>
 
+                <div className="flex items-center mt-4">
+                    <input
+                        type="checkbox"
+                        id="acceptTerms"
+                        checked={acceptTerms}
+                        onChange={(e) => setAcceptTerms(e.target.checked)}
+                        className="mr-2"
+                    />
+                    <label htmlFor="acceptTerms" className="text-sm">
+                        I accept the{" "}
+                        <button
+                            type="button"
+                            onClick={() => setShowTermsModal(true)}
+                            className="text-brand underline"
+                        >
+                            Terms and Conditions
+                        </button>
+                    </label>
+                </div>
+
                 <button
                     type="submit"
                     disabled={loading}
@@ -218,6 +247,7 @@ const AddFreelancer: React.FC<AddFreelancerProps> = ({ onAdded, onClose, isPubli
                 </button>
                 </form>
             </div>
+            <TermsModal isOpen={showTermsModal} onClose={() => setShowTermsModal(false)} />
         </div>
     );
 };

@@ -103,13 +103,19 @@ const CompanyDashboard: React.FC = () => {
     return (
         <div className="space-y-8">
             {/* ====== STAT CARDS ====== */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-6">
                 <StatCard title="Employees" value={data.employeesCount} />
                 <StatCard title="Jobs Posted" value={data.totalJobs} />
                 <StatCard title="Applicants" value={data.totalApplicants} />
                 <StatCard title="Total Hired" value={data.totalHired} />
                 <StatCard title="Active Jobs" value={data.activeJobs} />
                 <StatCard title="Expired Jobs" value={data.expiredJobs} />
+                <div className="bg-white border rounded-lg p-4 sm:p-5 shadow-sm flex flex-col justify-center text-center sm:text-left">
+                    <div className="text-xs sm:text-sm text-gray-500">Terms Accepted</div>
+                    <div className="text-xl sm:text-2xl font-semibold text-gray-800 mt-1">
+                        {company?.termsAccepted ? "Yes" : "No"}
+                    </div>
+                </div>
             </div>
 
             {/* <div className="flex justify-between items-center">

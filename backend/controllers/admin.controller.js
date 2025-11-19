@@ -142,7 +142,7 @@ export const getAllApplications = async (req, res) => {
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
-      .populate("user", "name email profilePhoto headline location")
+      .populate("user", "name email profilePhoto headline location termsAccepted")
       .populate("job", "title location company")
       .populate({
         path: "job",

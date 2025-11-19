@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs";
 import User from "../models/user.model.js";
+import Job from "../models/job.model.js";
 import generateToken from "../utils/generateToken.util.js";
 
 // ========== CREATE USER (Admin only) ==========
@@ -214,6 +215,20 @@ export const unsaveJob = async (req, res) => {
     await user.save();
 
     res.json({ message: "Job unsaved successfully" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// ========== GET SAVED JOBS ==========
+export const getSavedJobs = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).populate({
+      path: "savedJobs",
+      populate: { path: "company", select: "name logo" },
+    });
+    if (!user) return res.status(404).json({ message: "User not found" });
+    res.json(user.savedJobs);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

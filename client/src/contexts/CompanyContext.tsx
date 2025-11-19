@@ -15,6 +15,7 @@ export interface Company {
     address?: string;
     phone?: string;
     isVerified?: boolean;
+    termsAccepted?: boolean;
 }
 
 /**

@@ -50,6 +50,7 @@ const freelancerSchema = new mongoose.Schema(
     },
 
     isVerified: { type: Boolean, default: false },
+    termsAccepted: { type: Boolean, default: false },
     isActive: { type: Boolean, default: true },
     expiryDate: {
       type: Date,

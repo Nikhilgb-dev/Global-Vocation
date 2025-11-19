@@ -63,6 +63,8 @@ const userSchema = new mongoose.Schema(
       twitter: { type: String, default: "" },
     },
 
+    termsAccepted: { type: Boolean, default: false },
+
     company: { type: mongoose.Schema.Types.ObjectId, ref: "Company" },
   },
   { timestamps: true }

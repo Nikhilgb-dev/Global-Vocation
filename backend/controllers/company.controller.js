@@ -22,6 +22,7 @@ export const registerCompany = async (req, res) => {
       contactNumber,
       password,
       authorizedSignatory,
+      acceptTerms,
     } = req.body;
 
     // Check if company admin email already exists
@@ -59,6 +60,7 @@ export const registerCompany = async (req, res) => {
       authorizedSignatory: JSON.parse(authorizedSignatory || "{}"),
       logo,
       verificationDocs,
+      termsAccepted: acceptTerms,
     });
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -107,6 +109,7 @@ export const createCompanyByAdmin = async (req, res) => {
       contactNumber,
       authorizedSignatoryName,
       authorizedSignatoryDesignation,
+      acceptTerms,
     } = req.body;
 
     if (!name || !domain || !email || !password) {
@@ -159,6 +162,7 @@ export const createCompanyByAdmin = async (req, res) => {
         designation: authorizedSignatoryDesignation || "",
         signature,
       },
+      termsAccepted: acceptTerms,
     });
 
     const hashedPassword = await bcrypt.hash(password, 10);

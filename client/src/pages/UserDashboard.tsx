@@ -192,6 +192,7 @@ const FreelancerAppCard = ({ a, onView, onWithdraw, onViewOffer }: { a: AnyObj; 
 const UserDashboard: React.FC = () => {
     const [applications, setApplications] = useState<AnyObj[]>([]);
     const [freelancerApplications, setFreelancerApplications] = useState<AnyObj[]>([]);
+    const [savedJobs, setSavedJobs] = useState<AnyObj[]>([]);
     const [notifications, setNotifications] = useState<AnyObj[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedJob, setSelectedJob] = useState<AnyObj | null>(null);
@@ -211,6 +212,11 @@ const UserDashboard: React.FC = () => {
         setFreelancerApplications(Array.isArray(res.data) ? res.data : res.data?.applications ?? []);
     }, []);
 
+    const fetchSavedJobs = useCallback(async () => {
+        const res = await API.get("/users/saved-jobs");
+        setSavedJobs(Array.isArray(res.data) ? res.data : []);
+    }, []);
+
     const fetchNotifications = useCallback(async () => {
         const res = await API.get("/notifications");
         setNotifications(Array.isArray(res.data) ? res.data : res.data?.notifications ?? []);
@@ -219,7 +225,7 @@ const UserDashboard: React.FC = () => {
     useEffect(() => {
         const load = async () => {
             setLoading(true);
-            await Promise.all([fetchApplications(), fetchFreelancerApplications(), fetchNotifications()]);
+            await Promise.all([fetchApplications(), fetchFreelancerApplications(), fetchSavedJobs(), fetchNotifications()]);
             setLoading(false);
         };
         load();
@@ -252,16 +258,23 @@ const UserDashboard: React.FC = () => {
         setSelectedOffer(null);
     };
 
+    const unsaveJob = async (jobId: string) => {
+        if (!window.confirm("Remove this job from saved jobs?")) return;
+        await API.delete(`/users/jobs/${jobId}/save`);
+        await fetchSavedJobs();
+    };
+
     // memoized stats so re-renders don't recompute
     const stats = useMemo(() => {
         const jobApplications = applications.length;
         const freelanceApps = freelancerApplications.length;
+        const savedJobsCount = savedJobs.length;
         const totalApplications = jobApplications + freelanceApps;
         const hired = (applications.filter((a) => a.status === "hired") || []).length;
         const interview = (applications.filter((a) => a.status === "interview") || []).length;
         const rejected = (applications.filter((a) => a.status === "rejected") || []).length;
-        return { jobApplications, freelanceApps, totalApplications, hired, interview, rejected };
-    }, [applications, freelancerApplications]);
+        return { jobApplications, freelanceApps, savedJobsCount, totalApplications, hired, interview, rejected };
+    }, [applications, freelancerApplications, savedJobs]);
 
     if (loading) return <div className="text-gray-500 p-6">Loading...</div>;
 
@@ -273,10 +286,11 @@ const UserDashboard: React.FC = () => {
             </div>
 
             {/* Stats grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
                 <StatCard title="Total Applications" value={stats.totalApplications} />
                 <StatCard title="Job Applications" value={stats.jobApplications} />
                 <StatCard title="Freelancer Applications" value={stats.freelanceApps} />
+                <StatCard title="Saved Jobs" value={stats.savedJobsCount} />
                 <StatCard title="Hired" value={stats.hired} />
             </div>
 
@@ -456,6 +470,92 @@ const UserDashboard: React.FC = () => {
                                 ))}
                             </tbody>
                         </table>
+                    )}
+                </div>
+            </section>
+
+            {/* Saved Jobs block */}
+            <section className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6">
+                <h2 className="text-lg font-semibold mb-4">Saved Jobs</h2>
+
+                {/* DESKTOP / TABLET */}
+                <div className="hidden md:block overflow-x-auto">
+                    {savedJobs.length === 0 ? (
+                        <EmptyState message="You haven't saved any jobs yet." />
+                    ) : (
+                        <table className="w-full text-sm">
+                            <thead className="bg-gray-50 text-gray-600 border-b">
+                                <tr>
+                                    <th className="p-3 text-left">Job Title</th>
+                                    <th className="p-3 text-left">Company</th>
+                                    <th className="p-3 text-left">Location</th>
+                                    <th className="p-3 text-left">Salary</th>
+                                    <th className="p-3 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {savedJobs.map((job) => (
+                                    <tr key={job._id} className="border-b hover:bg-gray-50">
+                                        <td className="p-3">{job.title || "—"}</td>
+                                        <td className="p-3">{job.company?.name || "—"}</td>
+                                        <td className="p-3">{job.location || "—"}</td>
+                                        <td className="p-3">
+                                            {job.minSalary && job.maxSalary
+                                                ? `₹${job.minSalary} - ₹${job.maxSalary}`
+                                                : job.minSalary
+                                                    ? `From ₹${job.minSalary}`
+                                                    : job.maxSalary
+                                                        ? `Up to ₹${job.maxSalary}`
+                                                        : "Not specified"
+                                            }
+                                        </td>
+                                        <td className="p-3 text-right space-x-3">
+                                            <button onClick={() => setSelectedJob(job)} className="text-blue-600 hover:underline text-sm inline-flex items-center">
+                                                <Eye className="w-4 h-4 inline-block mr-1" /> View
+                                            </button>
+                                            <button onClick={() => unsaveJob(job._id)} className="text-red-600 hover:underline text-sm inline-flex items-center">
+                                                <Trash2 className="w-4 h-4 inline-block mr-1" /> Unsave
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    )}
+                </div>
+
+                {/* MOBILE: card list */}
+                <div className="space-y-3 md:hidden">
+                    {savedJobs.length === 0 ? (
+                        <EmptyState message="You haven't saved any jobs yet." />
+                    ) : (
+                        savedJobs.map((job) => (
+                            <div key={job._id} className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
+                                <div className="flex justify-between items-start gap-3">
+                                    <div>
+                                        <div className="text-sm font-semibold text-gray-900">{job.title || "—"}</div>
+                                        <div className="text-xs text-gray-500">{job.company?.name || "—"}</div>
+                                        <div className="text-xs text-gray-500">{job.location || "—"}</div>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => setSelectedJob(job)}
+                                            aria-label={`View job ${job.title || ""}`}
+                                            className="text-sm px-3 py-2 rounded-md border border-blue-600 text-blue-600 hover:bg-blue-50 transition"
+                                        >
+                                            <Eye className="w-4 h-4 inline-block mr-2" /> View
+                                        </button>
+                                        <button
+                                            onClick={() => unsaveJob(job._id)}
+                                            aria-label="Unsave job"
+                                            className="text-sm px-3 py-2 rounded-md border border-red-600 text-red-600 hover:bg-red-50 transition"
+                                        >
+                                            <Trash2 className="w-4 h-4 inline-block mr-2" /> Unsave
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        ))
                     )}
                 </div>
             </section>

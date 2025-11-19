@@ -6,6 +6,7 @@ import {
   getMyProfile,
   updateMyProfile,
   deleteMyAccount,
+  getSavedJobs,
   saveJob,
   unsaveJob,
   saveFreelancer,
@@ -23,6 +24,8 @@ router.put("/me", protect, upload.single("profilePhoto"), updateMyProfile);
 router.delete("/me", protect, deleteMyAccount);
 // Follow/unfollow other users
 router.post("/:id/follow", protect, toggleFollow);
+// Saved jobs
+router.get("/saved-jobs", protect, getSavedJobs);
 // Save/unsave jobs
 router.post("/jobs/:jobId/save", protect, saveJob);
 router.delete("/jobs/:jobId/save", protect, unsaveJob);

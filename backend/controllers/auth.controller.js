@@ -16,6 +16,7 @@ export const register = async (req, res) => {
       website,
       skills,
       socialLinks,
+      acceptTerms,
     } = req.body;
 
     const existingUser = await User.findOne({ email });
@@ -41,6 +42,7 @@ export const register = async (req, res) => {
       website,
       skills,
       socialLinks,
+      termsAccepted: acceptTerms,
     });
 
     res.status(201).json({

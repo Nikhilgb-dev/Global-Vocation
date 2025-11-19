@@ -34,6 +34,7 @@ interface Freelancer {
     min: number;
     max: number;
   };
+  termsAccepted?: boolean;
 }
 
 const FreelancerDashboard: React.FC = () => {
@@ -258,6 +259,10 @@ const FreelancerDashboard: React.FC = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Expiry Date</label>
                     <p className="text-gray-900">{formatDate(freelancer.expiryDate)}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Terms Accepted</label>
+                    <p className="text-gray-900">{freelancer.termsAccepted ? "Yes" : "No"}</p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Services Offered</label>

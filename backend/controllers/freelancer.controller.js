@@ -19,6 +19,7 @@ export const createFreelancer = async (req, res) => {
       services,
       pricing,
       password, // optional if admin provides it
+      acceptTerms,
     } = req.body;
 
     // parse arrays safely
@@ -50,6 +51,7 @@ export const createFreelancer = async (req, res) => {
       services: parsedServices,
       pricing: parsedPricing,
       isActive: true,
+      termsAccepted: acceptTerms,
     };
 
     // If request comes from an authenticated admin and admin included a password (or we generate one),

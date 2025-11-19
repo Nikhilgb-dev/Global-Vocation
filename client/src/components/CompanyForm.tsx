@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import API from "../api/api";
 import { toast } from "react-hot-toast";
+import TermsModal from "./TermsModal";
 
 interface CompanyFormData {
     name: string;
@@ -17,6 +18,7 @@ interface CompanyFormData {
     password: string;
     authorizedSignatoryName: string;
     authorizedSignatoryDesignation: string;
+    acceptTerms: boolean;
 }
 
 interface Props {
@@ -28,6 +30,7 @@ interface Props {
 const CompanyForm: React.FC<Props> = ({ mode, onSuccess, initialData }) => {
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
+    const [showTermsModal, setShowTermsModal] = useState(false);
 
     const [form, setForm] = useState<CompanyFormData>({
         name: "",
@@ -44,6 +47,7 @@ const CompanyForm: React.FC<Props> = ({ mode, onSuccess, initialData }) => {
         password: "",
         authorizedSignatoryName: "",
         authorizedSignatoryDesignation: "",
+        acceptTerms: false,
     });
 
     useEffect(() => {
@@ -67,6 +71,10 @@ const CompanyForm: React.FC<Props> = ({ mode, onSuccess, initialData }) => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!form.acceptTerms) {
+            toast.error("Please accept the terms and conditions");
+            return;
+        }
         try {
             setLoading(true);
             const formData = new FormData();
@@ -115,6 +123,7 @@ const CompanyForm: React.FC<Props> = ({ mode, onSuccess, initialData }) => {
                 password: "",
                 authorizedSignatoryName: "",
                 authorizedSignatoryDesignation: "",
+                acceptTerms: false,
             });
             setLogo(null);
             setSignature(null);
@@ -319,6 +328,25 @@ const CompanyForm: React.FC<Props> = ({ mode, onSuccess, initialData }) => {
                                 />
                             </div>
                         </div>
+                        <div className="flex items-center mt-4">
+                            <input
+                                type="checkbox"
+                                id="acceptTerms"
+                                checked={form.acceptTerms}
+                                onChange={(e) => setForm({ ...form, acceptTerms: e.target.checked })}
+                                className="mr-2"
+                            />
+                            <label htmlFor="acceptTerms" className="text-sm">
+                              I accept the{" "}
+                              <button
+                                type="button"
+                                onClick={() => setShowTermsModal(true)}
+                                className="text-brand underline"
+                              >
+                                Terms and Conditions
+                              </button>
+                            </label>
+                        </div>
                     </div>
                 )}
 
@@ -352,9 +380,10 @@ const CompanyForm: React.FC<Props> = ({ mode, onSuccess, initialData }) => {
                         </button>
                     )}
                 </div>
-            </form>
-        </div>
-    );
-};
+              </form>
+              <TermsModal isOpen={showTermsModal} onClose={() => setShowTermsModal(false)} />
+            </div>
+          );
+        };
 
 export default CompanyForm;
