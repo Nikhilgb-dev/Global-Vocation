@@ -38,6 +38,7 @@ const Dashboard = () => {
   const [users, setUsers] = useState<any[]>([]);
   const [posts, setPosts] = useState<any[]>([]);
   const [selectedApplicant, setSelectedApplicant] = useState<any | null>(null);
+  const [abuseReports, setAbuseReports] = useState<any[]>([]);
   const [showCreateCandidateModal, setShowCreateCandidateModal] = useState(false);
   const [showEditJobModal, setShowEditJobModal] = useState(false);
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
@@ -79,6 +80,15 @@ const Dashboard = () => {
     }
   };
 
+  const fetchAbuseReports = async () => {
+    try {
+      const res = await API.get("/admin/abuse-reports");
+      setAbuseReports(res.data || []);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const fetchJobs = async () => {
     try {
       const res = await API.get("/jobs");
@@ -96,6 +106,7 @@ const Dashboard = () => {
       fetchUsers();
       fetchCompanies();
       fetchApplications();
+      fetchAbuseReports();
     } else if (user?.role === "user") {
       API.get("/posts").then((res) => setPosts(res.data));
     }
@@ -1043,6 +1054,111 @@ const Dashboard = () => {
                   </tbody>
                 </table>
               </div>
+            </motion.div>
+
+            {/* ===== Abuse Reports ===== */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.8 }}
+              className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mt-8"
+            >
+              <div className="px-6 py-5 border-b border-gray-100">
+                <div className="flex items-center gap-3">
+                  <div className="bg-red-50 p-2.5 rounded-lg">
+                    <Shield className="w-5 h-5 text-red-600" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900">Abuse Reports</h2>
+                    <p className="text-sm text-gray-500 mt-0.5">
+                      View and manage reported abuse across the platform
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50 border-b border-gray-100">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Job Title
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Company
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Reported By
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Reason
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Reported On
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    <AnimatePresence>
+                      {abuseReports.map((report, index) => (
+                        <motion.tr
+                          key={report._id}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ delay: index * 0.03 }}
+                          className="hover:bg-blue-50/30 transition-colors"
+                        >
+                          <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">
+                            {report.job?.title || "N/A"}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                            {report.job?.company?.name || "N/A"}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div>
+                              <div className="font-medium text-gray-900 text-sm">
+                                {report.reportedBy?.name || "Anonymous"}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                {report.reportedBy?.email}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 capitalize">
+                            {report.reason}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span
+                              className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
+                                report.status === "pending"
+                                  ? "bg-yellow-50 text-yellow-700 ring-1 ring-yellow-600/20"
+                                  : report.status === "reviewed"
+                                  ? "bg-blue-50 text-blue-700 ring-1 ring-blue-600/20"
+                                  : "bg-green-50 text-green-700 ring-1 ring-green-600/20"
+                              }`}
+                            >
+                              {report.status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {new Date(report.createdAt).toLocaleDateString()}
+                          </td>
+                        </motion.tr>
+                      ))}
+                    </AnimatePresence>
+                  </tbody>
+                </table>
+              </div>
+
+              {abuseReports.length === 0 && (
+                <div className="text-center py-6 text-gray-500 text-sm">
+                  No abuse reports found.
+                </div>
+              )}
             </motion.div>
 
             {/* ===== Modals ===== */}

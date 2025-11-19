@@ -22,6 +22,7 @@ import {
   getMyCompany,
   addCompanyRemark,
   companyNotifications,
+  getCompanyAbuseReports,
 } from "../controllers/company.controller.js";
 import { companyLogin } from "../controllers/companyAuth.controller.js";
 import {
@@ -55,6 +56,7 @@ router.delete("/me/jobs/:id", protect, companyAdminOnly, deleteMyJob);
 router.get("/me/employees", protect, companyAdminOnly, getMyEmployees);
 router.put("/me/employees/:id/fire", protect, companyAdminOnly, fireEmployee);
 router.get("/me/applicants", protect, companyAdminOnly, getCompanyApplicants);
+router.get("/me/abuse-reports", protect, companyAdminOnly, getCompanyAbuseReports);
 
 router.put("/:id/remark", protect, adminOnly, addCompanyRemark);
 router.get("/me/remarks", protect, companyNotifications);

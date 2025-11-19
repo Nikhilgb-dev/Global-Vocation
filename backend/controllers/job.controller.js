@@ -2,6 +2,7 @@ import Job from "../models/job.model.js";
 import Application from "../models/application.model.js";
 import { uploadToCloudinary } from "../utils/cloudinary.util.js";
 import ApplicationProfile from "../models/applicationProfile.model.js";
+import AbuseReport from "../models/abuseReport.model.js";
 export const applyJob = async (req, res) => {
   try {
     const jobId = req.params.id;
@@ -296,6 +297,42 @@ export const updateJob = async (req, res) => {
     res.json(job);
   } catch (err) {
     res.status(400).json({ message: err.message });
+  }
+};
+
+/**
+ * REPORT ABUSE
+ */
+export const reportAbuse = async (req, res) => {
+  try {
+    const jobId = req.params.id;
+    const { reason, description } = req.body;
+
+    // Check if job exists
+    const job = await Job.findById(jobId);
+    if (!job) return res.status(404).json({ message: "Job not found" });
+
+    // Prevent duplicate reports from same user
+    const existingReport = await AbuseReport.findOne({
+      reportedBy: req.user._id,
+      job: jobId,
+    });
+    if (existingReport) {
+      return res.status(400).json({ message: "You have already reported this job" });
+    }
+
+    // Create abuse report
+    const report = await AbuseReport.create({
+      reportedBy: req.user._id,
+      job: jobId,
+      reason,
+      description,
+    });
+
+    res.status(201).json({ message: "Abuse report submitted successfully", report });
+  } catch (err) {
+    console.error("Report Abuse Error:", err);
+    res.status(500).json({ message: err.message });
   }
 };
 

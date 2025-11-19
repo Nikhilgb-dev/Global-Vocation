@@ -8,6 +8,7 @@ import {
   applyJob,
   getJobCategories,
   getMyApplicationProfile,
+  reportAbuse,
 } from "../controllers/job.controller.js";
 
 import { protect } from "../middlewares/auth.middleware.js";
@@ -19,6 +20,7 @@ const router = express.Router();
 router.post("/", protect, createJob);
 
 router.post("/:id/apply", protect, upload.single("resume"), applyJob);
+router.post("/:id/report-abuse", protect, reportAbuse);
 router.get("/", protect, getJobs);
 router.get("/my-profile", protect, getMyApplicationProfile);
 router.get("/:id", getJobById);

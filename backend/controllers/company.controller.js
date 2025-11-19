@@ -6,6 +6,7 @@ import Application from "../models/application.model.js";
 import Notification from "../models/notification.model.js";
 import Job from "../models/job.model.js";
 import generateToken from "../utils/generateToken.util.js";
+import AbuseReport from "../models/abuseReport.model.js";
 
 export const registerCompany = async (req, res) => {
   try {
@@ -726,6 +727,27 @@ export const companyNotifications = async (req, res) => {
       remarksHistory: sorted,
     });
   } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const getCompanyAbuseReports = async (req, res) => {
+  try {
+    const companyId = req.user.company;
+
+    // Find all jobs for this company
+    const jobs = await Job.find({ company: companyId }).select("_id");
+    const jobIds = jobs.map((j) => j._id);
+
+    // Find abuse reports for these jobs
+    const reports = await AbuseReport.find({ job: { $in: jobIds } })
+      .sort({ createdAt: -1 })
+      .populate("reportedBy", "name email")
+      .populate("job", "title");
+
+    res.json(reports);
+  } catch (err) {
+    console.error("Error in getCompanyAbuseReports:", err);
     res.status(500).json({ message: err.message });
   }
 };

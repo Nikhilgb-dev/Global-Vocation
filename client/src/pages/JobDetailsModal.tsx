@@ -72,7 +72,7 @@ const JobDetailsModal = ({ jobId, onClose }: JobDetailsModalProps) => {
                                         </div>
                                         <div>
                                             <p className="text-xs text-gray-600 font-medium">Company</p>
-                                            <p className="text-sm font-bold text-gray-800">{job.company.name || job.company}</p>
+                                            <p className="text-sm font-bold text-gray-800">{job.postedBy.name}</p>
                                         </div>
                                     </div>
                                 </div>

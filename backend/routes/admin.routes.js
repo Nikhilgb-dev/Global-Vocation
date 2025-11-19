@@ -24,6 +24,7 @@ import {
   getAllFreelancers,
   verifyFreelancer,
   deleteFreelancer,
+  getAllAbuseReports,
 } from "../controllers/admin.controller.js";
 import { protect, adminOnly } from "../middlewares/auth.middleware.js";
 import { upload } from "../utils/cloudinary.util.js";
@@ -77,5 +78,8 @@ router.delete("/posts/:id", protect, adminOnly, deletePost);
 router.get("/freelancers", protect, adminOnly, getAllFreelancers);
 router.put("/freelancers/:id/verify", protect, adminOnly, verifyFreelancer);
 router.delete("/freelancers/:id", protect, adminOnly, deleteFreelancer);
+
+// ABUSE REPORTS
+router.get("/abuse-reports", protect, adminOnly, getAllAbuseReports);
 
 export default router;

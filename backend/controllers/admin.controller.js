@@ -5,6 +5,7 @@ import Community from "../models/community.model.js";
 import Notification from "../models/notification.model.js";
 import Post from "../models/post.model.js";
 import Freelancer from "../models/freelancer.model.js";
+import AbuseReport from "../models/abuseReport.model.js";
 import bcrypt from "bcryptjs";
 
 // ====================== USERS ======================
@@ -364,6 +365,25 @@ export const deleteFreelancer = async (req, res) => {
     if (!freelancer) return res.status(404).json({ message: "Freelancer not found" });
     res.json({ message: "Freelancer deleted successfully" });
   } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// ====================== ABUSE REPORTS ======================
+export const getAllAbuseReports = async (req, res) => {
+  try {
+    const reports = await AbuseReport.find()
+      .sort({ createdAt: -1 })
+      .populate("reportedBy", "name email")
+      .populate("job", "title")
+      .populate({
+        path: "job",
+        populate: { path: "company", select: "name" },
+      });
+
+    res.json(reports);
+  } catch (err) {
+    console.error("Error in getAllAbuseReports:", err);
     res.status(500).json({ message: err.message });
   }
 };

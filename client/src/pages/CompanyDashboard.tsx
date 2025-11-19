@@ -42,6 +42,7 @@ const CompanyDashboard: React.FC = () => {
     const [showEditJobModal, setShowEditJobModal] = useState(false);
     const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
     const [showEditCompanyModal, setShowEditCompanyModal] = useState(false);
+    const [abuseReports, setAbuseReports] = useState<any[]>([]);
 
     const fetchDashboard = async () => {
         const res = await API.get("/companies/me/dashboard");
@@ -51,6 +52,11 @@ const CompanyDashboard: React.FC = () => {
     const fetchApplicants = async () => {
         const res = await API.get("/companies/me/applicants");
         setApplicants(res.data.applications || []);
+    };
+
+    const fetchAbuseReports = async () => {
+        const res = await API.get("/companies/me/abuse-reports");
+        setAbuseReports(res.data || []);
     };
 
     useEffect(() => {
@@ -69,7 +75,7 @@ const CompanyDashboard: React.FC = () => {
         const load = async () => {
             setLoading(true);
             try {
-                await Promise.all([fetchDashboard(), fetchApplicants()]);
+                await Promise.all([fetchDashboard(), fetchApplicants(), fetchAbuseReports()]);
             } catch (err) {
                 console.error(err);
             } finally {
@@ -317,6 +323,74 @@ const CompanyDashboard: React.FC = () => {
                                                 onClose={() => setSelectedApplicant(null)}
                                             />
                                         )}
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </div>
+
+            {/* ====== REPORTED ABUSES TABLE ====== */}
+            <div className="bg-white border rounded-lg shadow-sm p-4 sm:p-6">
+                <h2 className="text-lg sm:text-xl font-semibold mb-4 text-gray-800">
+                    Reported Abuses
+                </h2>
+
+                {abuseReports.length === 0 ? (
+                    <div className="text-gray-500 text-center py-6">
+                        No abuse reports found.
+                    </div>
+                ) : (
+                    <div className="">
+                        <table className="w-full text-xs sm:text-sm border-t">
+                            <thead className="bg-gray-50 text-gray-600 border-b">
+                                <tr>
+                                    <th className="p-2 sm:p-3 text-left">Job Title</th>
+                                    <th className="p-2 sm:p-3 text-left">Reported By</th>
+                                    <th className="p-2 sm:p-3 text-left">Reason</th>
+                                    <th className="p-2 sm:p-3 text-left">Status</th>
+                                    <th className="p-2 sm:p-3 text-left hidden sm:table-cell">Reported On</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {abuseReports.map((report) => (
+                                    <tr
+                                        key={report._id}
+                                        className="border-b hover:bg-gray-50 transition"
+                                    >
+                                        <td className="p-2 sm:p-3 font-medium text-gray-900">
+                                            {report.job?.title || "N/A"}
+                                        </td>
+                                        <td className="p-2 sm:p-3">
+                                            <div>
+                                                <div className="font-medium text-gray-900 text-sm">
+                                                    {report.reportedBy?.name || "Anonymous"}
+                                                </div>
+                                                <div className="text-xs text-gray-500">
+                                                    {report.reportedBy?.email}
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="p-2 sm:p-3 capitalize text-gray-600">
+                                            {report.reason}
+                                        </td>
+                                        <td className="p-2 sm:p-3">
+                                            <span
+                                                className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
+                                                    report.status === "pending"
+                                                        ? "bg-yellow-50 text-yellow-700 ring-1 ring-yellow-600/20"
+                                                        : report.status === "reviewed"
+                                                        ? "bg-blue-50 text-blue-700 ring-1 ring-blue-600/20"
+                                                        : "bg-green-50 text-green-700 ring-1 ring-green-600/20"
+                                                }`}
+                                            >
+                                                {report.status}
+                                            </span>
+                                        </td>
+                                        <td className="p-2 sm:p-3 text-gray-500 hidden sm:table-cell">
+                                            {new Date(report.createdAt).toLocaleDateString()}
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>

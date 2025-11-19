@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import API from "../api/api";
 import ApplyModal from "../components/ApplyModal";
 import JobDetailsModal from "./JobDetailsModal";
-import { Bookmark, Share2 } from "lucide-react";
+import ReportAbuseModal from "../components/ReportAbuseModal";
+import { Bookmark, Share2, Shield } from "lucide-react";
 import toast from "react-hot-toast";
 
 const Jobs = () => {
@@ -15,6 +16,8 @@ const Jobs = () => {
   const [selectedJob, setSelectedJob] = useState<string | null>(null);
   const [user, setUser] = useState<any>(null);
   const [savedJobs, setSavedJobs] = useState<string[]>([]);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportJob, setReportJob] = useState<any>(null);
 
   useEffect(() => {
     setLoading(true);
@@ -76,6 +79,15 @@ const Jobs = () => {
       navigator.clipboard.writeText(`${text} ${url}`);
       toast.success("Link copied to clipboard");
     }
+  };
+
+  const handleReportAbuse = (job: any) => {
+    if (!user) {
+      toast.error("Please login to report abuse");
+      return;
+    }
+    setReportJob(job);
+    setShowReportModal(true);
   };
 
   const filtered = jobs.filter(
@@ -223,7 +235,7 @@ const Jobs = () => {
                 className="cursor-pointer bg-white rounded-xl sm:rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100 overflow-hidden group flex flex-col justify-between"
               >
                 <div className="p-5 sm:p-6 flex-1 flex flex-col relative">
-                  {/* Save and Share Buttons - Top Right */}
+                  {/* Save, Share, and Report Buttons - Top Right */}
                   {user && (
                     <div className="absolute top-4 right-4 flex gap-2">
                       <button
@@ -249,6 +261,16 @@ const Jobs = () => {
                         title="Share"
                       >
                         <Share2 className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleReportAbuse(job);
+                        }}
+                        className="p-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-semibold hover:bg-red-200 hover:text-red-700 transition-all"
+                        title="Report Abuse"
+                      >
+                        <Shield className="w-4 h-4" />
                       </button>
                     </div>
                   )}
@@ -401,6 +423,21 @@ const Jobs = () => {
           onApply={(jobId: string) => {
             setShowDetails(false);
             handleApply(jobId);
+          }}
+        />
+      )}
+      {showReportModal && reportJob && (
+        <ReportAbuseModal
+          jobId={reportJob._id}
+          jobTitle={reportJob.title}
+          onClose={() => {
+            setShowReportModal(false);
+            setReportJob(null);
+          }}
+          onSuccess={() => {
+            setShowReportModal(false);
+            setReportJob(null);
+            toast.success("Report submitted successfully");
           }}
         />
       )}
