@@ -537,8 +537,8 @@ export default function Navbar() {
               className="bg-white rounded-xl shadow-xl p-4 sm:p-6 w-full max-w-md"
               onClick={(e) => e.stopPropagation()}
             >
-              <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-4">Get Help</h3>
-              <div className="space-y-3 sm:space-y-4">
+              <div className="space-y-3 sm:space-y-4 lg:mt-80">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-4">Get Help</h3>
                 <div>
                   <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Name</label>
                   <input
