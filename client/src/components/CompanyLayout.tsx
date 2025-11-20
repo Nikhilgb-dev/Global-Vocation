@@ -14,10 +14,10 @@ import {
 
 const navItems = [
     { path: "/company/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { path: "/company/profile", label: "Profile", icon: Building2 },
-    { path: "/company/jobs", label: "Jobs", icon: BriefcaseBusiness },
-    { path: "/company/employees", label: "Employees", icon: Users2 },
     { path: "/company/applicants", label: "Applicants", icon: UserSearch },
+    { path: "/company/jobs", label: "Jobs Postings", icon: BriefcaseBusiness },
+    { path: "/company/employees", label: "Employees", icon: Users2 },
+    { path: "/company/profile", label: "Profile", icon: Building2 },
 ];
 
 const CompanyLayout: React.FC = () => {
