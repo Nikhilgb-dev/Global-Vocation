@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import API from "@/api/api";
 import { motion } from "framer-motion";
 import { Camera, Trash2, Save, Building2, User, Shield } from "lucide-react";
 
 const Settings = () => {
+    const navigate = useNavigate();
     const [user, setUser] = useState<any>(null);
     const [company, setCompany] = useState<any>(null);
     const [freelancer, setFreelancer] = useState<any>(null);
@@ -57,6 +59,13 @@ const Settings = () => {
                 await API.put("/users/me", form);
             }
             alert("Profile updated successfully!");
+            const getDashboardPath = () => {
+                if (user?.role === "admin") return "/dashboard";
+                if (user?.role === "company_admin") return "/company/dashboard";
+                if (user?.role === "freelancer") return "/freelancer/dashboard";
+                return "/user/dashboard";
+            };
+            navigate(getDashboardPath());
         } catch (err) {
             alert("Failed to update profile.");
         } finally {

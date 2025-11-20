@@ -189,38 +189,40 @@ export default function Navbar() {
   const dashboardLink = getDashboardLink();
 
   return (
-    <header className="sticky top-0 z-50 border-b border-gray-200 bg-white/95 backdrop-blur-lg shadow-sm">
+    <header className="sticky p-1.5 top-0 z-50 border-b border-gray-200 bg-white/95 backdrop-blur-lg shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between gap-4">
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 flex-shrink-0 group">
-            <div className="relative">
-              <img
-                src={logo}
-                alt="Plabonic"
-                className="h-12 w-auto object-contain transition-transform duration-200 group-hover:scale-105"
-              />
-              <span className="absolute -top-1 -right-8 bg-orange-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">
-                Beta
-              </span>
-            </div>
-          </Link>
+          <div className="flex items-center gap-4">
+            {/* Logo */}
+            <Link to="/" className="flex items-center gap-2 flex-shrink-0 group">
+              <div className="relative">
+                <img
+                  src={logo}
+                  alt="Plabonic"
+                  className="h-14 w-auto object-contain transition-transform duration-200 group-hover:scale-105"
+                />
+                <span className="absolute -top-1 -right-8 bg-orange-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">
+                  Beta
+                </span>
+              </div>
+            </Link>
 
-          {/* Nav Links */}
-          <nav className={`ml-12 hidden md:flex items-center gap-2 flex-1 ${!user ? 'justify-start' : 'justify-center'}`}>
-            <NavLink to="/jobs" className={navLinkClass}>
-              <div className="flex items-center gap-2">
-                <Briefcase className="w-4 h-4" />
-                <span className="hidden sm:inline">Jobs</span>
-              </div>
-            </NavLink>
-            <NavLink to="/freelancers" className={navLinkClass}>
-              <div className="flex items-center gap-2">
-                <Users className="w-4 h-4" />
-                <span className="hidden sm:inline">Freelancers</span>
-              </div>
-            </NavLink>
-          </nav>
+            {/* Nav Links */}
+            <nav className="hidden md:flex items-center gap-2">
+              <NavLink to="/jobs" className={navLinkClass}>
+                <div className="flex items-center gap-2">
+                  <Briefcase className="w-4 h-4" />
+                  <span className="hidden sm:inline">Jobs</span>
+                </div>
+              </NavLink>
+              <NavLink to="/freelancers" className={navLinkClass}>
+                <div className="flex items-center gap-2">
+                  <Users className="w-4 h-4" />
+                  <span className="hidden sm:inline">Freelancers</span>
+                </div>
+              </NavLink>
+            </nav>
+          </div>
 
           {/* Right Section */}
           <div className="flex items-center gap-3">
@@ -235,6 +237,17 @@ export default function Navbar() {
 
             {user ? (
               <>
+                {/* Dashboard Button */}
+                {dashboardLink && (
+                  <Link
+                    to={dashboardLink.to}
+                    className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-sm font-medium rounded-lg shadow-md hover:shadow-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 flex items-center gap-2"
+                  >
+                    <LayoutDashboard className="w-4 h-4" />
+                    <span>Dashboard</span>
+                  </Link>
+                )}
+
                 {/* Notifications */}
                 <div className="relative" ref={notificationRef}>
                   <button
