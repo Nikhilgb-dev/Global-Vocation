@@ -123,6 +123,7 @@ const FreelancerList: React.FC = () => {
                                 fetchFreelancers();
                                 setShowAddModal(false);
                             }}
+                            onClose={() => setShowAddModal(false)}
                         />
                         <button
                             onClick={() => setShowAddModal(false)}
