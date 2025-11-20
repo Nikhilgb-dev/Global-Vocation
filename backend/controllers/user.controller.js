@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import User from "../models/user.model.js";
 import Job from "../models/job.model.js";
 import generateToken from "../utils/generateToken.util.js";
+import { uploadToCloudinary } from "../utils/cloudinary.util.js";
 
 // ========== CREATE USER (Admin only) ==========
 export const createUser = async (req, res) => {
@@ -37,17 +38,27 @@ export const getMyProfile = async (req, res) => {
 
 export const updateMyProfile = async (req, res) => {
   try {
-    const { name, location, password } = req.body;
+    const updates = { ...req.body };
+    delete updates.password; // Never update password here, use separate endpoint if needed
+    delete updates.email; // Email should not be updated easily
+    delete updates.role; // Role should not be updated by user
+    delete updates.company; // Company reference should not be updated by user
+    delete updates.followers; // Followers should not be updated by user
+    delete updates.following; // Following should not be updated by user
+    delete updates.savedJobs; // Saved jobs should not be updated by user
+    delete updates.savedFreelancers; // Saved freelancers should not be updated by user
+    delete updates.termsAccepted; // Terms accepted should not be updated
+    delete updates.joinDate; // Join date should not be updated
+
     const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    if (name) user.name = name;
-    if (location) user.location = location;
-
-    // optional password update
-    if (password && password.trim().length >= 6) {
-      user.password = await bcrypt.hash(password, 10);
-    }
+    // Update fields
+    Object.keys(updates).forEach(key => {
+      if (updates[key] !== undefined) {
+        user[key] = updates[key];
+      }
+    });
 
     // optional profile photo upload
     if (req.file) {

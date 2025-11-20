@@ -289,6 +289,41 @@ export const getMyFreelancerProfile = async (req, res) => {
   }
 };
 
+export const updateMyFreelancerProfile = async (req, res) => {
+  try {
+    const freelancer = await Freelancer.findOne({
+      $or: [{ createdBy: req.user._id }, { email: req.user.email }],
+    });
+    if (!freelancer)
+      return res.status(404).json({ message: "Freelancer profile not found" });
+
+    const updates = { ...req.body };
+    delete updates.createdBy; // Should not be updated
+    delete updates.isVerified; // Should not be updated by user
+    delete updates.isActive; // Should not be updated by user
+    delete updates.expiryDate; // Should not be updated by user
+
+    // Handle photo upload
+    if (req.file) {
+      updates.photo = await uploadToCloudinary(req.file, "freelancers");
+    }
+
+    Object.keys(updates).forEach(key => {
+      if (updates[key] !== undefined) {
+        freelancer[key] = updates[key];
+      }
+    });
+
+    await freelancer.save();
+    res.json({
+      message: "Freelancer profile updated successfully",
+      freelancer,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 export const updateApplicationStatus = async (req, res) => {
   try {
     const { status } = req.body;
