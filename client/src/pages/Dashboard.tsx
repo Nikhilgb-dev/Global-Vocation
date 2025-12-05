@@ -98,6 +98,25 @@ const Dashboard = () => {
     }
   };
 
+  const handleResumeView = async (application: any) => {
+    setResumeUrl(application?.resume || null);
+    if (!application?._id) return;
+    // Only auto-mark as reviewed if the application is still in applied state to avoid overriding later steps.
+    if (application.status !== "applied") return;
+    try {
+      await API.put(`/admin/applications/${application._id}/status`, {
+        status: "reviewed",
+      });
+      setApplications((prev) =>
+        prev.map((item) =>
+          item._id === application._id ? { ...item, status: "reviewed" } : item
+        )
+      );
+    } catch (err) {
+      console.error("Failed to auto-mark as reviewed", err);
+    }
+  };
+
 
   useEffect(() => {
     if (user?.role === "admin") {
@@ -921,8 +940,10 @@ const Dashboard = () => {
                             </td>
 
                           </td>
-                          <td className="px-6 py-4 text-sm text-blue-600 underline cursor-pointer"
-                            onClick={() => setResumeUrl(a.resume)}>
+                          <td
+                            className="px-6 py-4 text-sm text-blue-600 underline cursor-pointer"
+                            onClick={() => handleResumeView(a)}
+                          >
                             View Resume
                           </td>
 

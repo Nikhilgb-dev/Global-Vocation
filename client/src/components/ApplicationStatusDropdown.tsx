@@ -27,6 +27,11 @@ const ApplicationStatusDropdown: React.FC<Props> = ({
     const [status, setStatus] = useState(currentStatus);
     const [loading, setLoading] = useState(false);
 
+    // Sync internal state when parent-provided status changes
+    React.useEffect(() => {
+        setStatus(currentStatus);
+    }, [currentStatus]);
+
     const handleChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
         const newStatus = e.target.value;
         setStatus(newStatus);

@@ -57,12 +57,12 @@ const JobAppCard = ({ a, onView, onWithdraw, onViewOffer }: { a: AnyObj; onView:
                 <div className="mt-2">
                     <span
                         className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${a.status === "hired"
-                                ? "bg-green-100 text-green-800"
-                                : a.status === "accepted"
-                                    ? "bg-blue-100 text-blue-800"
-                                    : a.status === "rejected"
-                                        ? "bg-red-100 text-red-800"
-                                        : "bg-gray-100 text-gray-800"
+                            ? "bg-green-100 text-green-800"
+                            : a.status === "accepted"
+                                ? "bg-blue-100 text-blue-800"
+                                : a.status === "rejected"
+                                    ? "bg-red-100 text-red-800"
+                                    : "bg-gray-100 text-gray-800"
                             }`}
                     >
                         {a.status || "applied"}
@@ -136,12 +136,12 @@ const FreelancerAppCard = ({ a, onView, onWithdraw, onViewOffer }: { a: AnyObj; 
                 <div className="mt-2">
                     <span
                         className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${a.status === "hired"
-                                ? "bg-green-100 text-green-800"
-                                : a.status === "accepted"
-                                    ? "bg-blue-100 text-blue-800"
-                                    : a.status === "rejected"
-                                        ? "bg-red-100 text-red-800"
-                                        : "bg-gray-100 text-gray-800"
+                            ? "bg-green-100 text-green-800"
+                            : a.status === "accepted"
+                                ? "bg-blue-100 text-blue-800"
+                                : a.status === "rejected"
+                                    ? "bg-red-100 text-red-800"
+                                    : "bg-gray-100 text-gray-800"
                             }`}
                     >
                         {a.status || "applied"}
@@ -295,6 +295,33 @@ const UserDashboard: React.FC = () => {
         return { jobApplications, freelanceApps, savedJobsCount, totalApplications, hired, interview, rejected };
     }, [applications, freelancerApplications, savedJobs]);
 
+    // granular job-application pipeline counts for candidate view
+    const statusCounts = useMemo(() => {
+        const counts = {
+            applied: 0,
+            reviewed: 0,
+            interview: 0,
+            offer: 0,
+            hired: 0,
+            accepted: 0,
+            rejected: 0,
+            denied: 0,
+        };
+        applications.forEach((a) => {
+            const status = (a.status || "applied").toLowerCase();
+            if (status === "accepted") counts.accepted += 1;
+            if (status === "rejected") counts.denied += 1;
+            if (status in counts) counts[status as keyof typeof counts] += 1;
+            else counts.applied += 1;
+        });
+        return counts;
+    }, [applications]);
+
+    const firstHiredApplication = useMemo(
+        () => applications.find((a) => (a.status || "").toLowerCase() === "hired") || null,
+        [applications]
+    );
+
     if (loading) return <div className="text-gray-500 p-6">Loading...</div>;
 
     return (
@@ -312,6 +339,23 @@ const UserDashboard: React.FC = () => {
                 <StatCard title="Saved Jobs" value={stats.savedJobsCount} />
                 <StatCard title="Hired" value={stats.hired} />
             </div>
+
+            {/* Application status pipeline */}
+            <section className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6">
+                <h2 className="text-lg font-semibold mb-4">Application Status Overview</h2>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-3">
+                    <StatCard title="Applied" value={statusCounts.applied} />
+                    <StatCard title="Reviewed" value={statusCounts.reviewed} />
+                    <StatCard title="Interview Call" value={statusCounts.interview} />
+                    <StatCard title="Job Offer" value={statusCounts.offer} />
+                    <StatCard title="Rejected" value={statusCounts.rejected} />
+                    <StatCard title="Offer Accepted" value={statusCounts.accepted} />
+                    <StatCard title="Offer Denied" value={statusCounts.denied} />
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-5">
+                        <p className="text-xs sm:text-sm text-gray-500">Hired</p>
+                    </div>
+                </div>
+            </section>
 
             {/* Applications block */}
             <section className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6">

@@ -61,6 +61,25 @@ const CompanyDashboard: React.FC = () => {
         setAbuseReports(res.data || []);
     };
 
+    const handleResumeView = async (application: any) => {
+        setResumeUrl(application?.resume || null);
+        if (!application?._id) return;
+        // Only auto-mark as reviewed when still in the applied state to avoid downgrading later stages.
+        if (application.status !== "applied") return;
+        try {
+            await API.put(`/companies/me/applicants/${application._id}/status`, {
+                status: "reviewed",
+            });
+            setApplicants((prev) =>
+                prev.map((item) =>
+                    item._id === application._id ? { ...item, status: "reviewed" } : item
+                )
+            );
+        } catch (err) {
+            console.error("Failed to auto-mark application as reviewed", err);
+        }
+    };
+
     useEffect(() => {
         const loadBaseData = async () => {
             try {
@@ -466,9 +485,7 @@ const CompanyDashboard: React.FC = () => {
                                     <div className="mt-3 flex gap-4 text-[11px] font-medium">
                                         <button
                                             className="text-blue-600 hover:underline"
-                                            onClick={() =>
-                                                setResumeUrl(a.resume)
-                                            }
+                                            onClick={() => handleResumeView(a)}
                                         >
                                             View Resume
                                         </button>
@@ -568,9 +585,7 @@ const CompanyDashboard: React.FC = () => {
                                                 </td>
                                                 <td
                                                     className="p-2 sm:p-3 text-blue-600 hover:underline cursor-pointer whitespace-nowrap"
-                                                    onClick={() =>
-                                                        setResumeUrl(a.resume)
-                                                    }
+                                                    onClick={() => handleResumeView(a)}
                                                 >
                                                     View Resume
                                                 </td>
