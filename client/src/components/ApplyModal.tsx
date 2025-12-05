@@ -6,6 +6,7 @@ interface ApplyModalProps {
   jobId: string;
   onClose: () => void;
   initialContact?: { name?: string; email?: string; phone?: string; altPhone?: string };
+  onApplied?: (jobId: string) => void;
 }
 
 interface ExperienceItem {
@@ -17,7 +18,7 @@ interface ExperienceItem {
   description: string;
 }
 
-const ApplyModal: React.FC<ApplyModalProps> = ({ jobId, onClose, initialContact }) => {
+const ApplyModal: React.FC<ApplyModalProps> = ({ jobId, onClose, initialContact, onApplied }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [educationHistory, setEducationHistory] = useState([
     { school: "", degree: "", fieldOfStudy: "", startDate: "", endDate: "" },
@@ -27,6 +28,7 @@ const ApplyModal: React.FC<ApplyModalProps> = ({ jobId, onClose, initialContact 
     { name: "", description: "", link: "", startDate: "", endDate: "" },
   ]);
 
+  type ResumeMode = "existing" | "upload";
   const [resumeFile, setResumeFile] = useState<File | null>(null);
 
   const [name, setName] = useState<string>(initialContact?.name || "");
@@ -40,15 +42,29 @@ const ApplyModal: React.FC<ApplyModalProps> = ({ jobId, onClose, initialContact 
   const [experienceHistory, setExperienceHistory] = useState<ExperienceItem[]>([
     { companyName: "", jobTitle: "", startDate: "", endDate: "", currentlyWorking: false, description: "" },
   ]);
-  const [existingResume, setExistingResume] = useState<string | null>(null);
+  const [existingResumes, setExistingResumes] = useState<string[]>([]);
+  const [selectedResume, setSelectedResume] = useState<string | null>(null);
+  const [resumeMode, setResumeMode] = useState<ResumeMode>("upload");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isProfileLoading, setIsProfileLoading] = useState(true);
 
 
   useEffect(() => {
     const fetchProfile = async () => {
+      setIsProfileLoading(true);
       try {
         const res = await API.get("/jobs/my-profile");
         if (res.data) {
-          const p = res.data;
+          const p: any = res.data;
+          const resumesFromProfile: string[] = Array.isArray(p?.resumes) && p.resumes.length
+            ? p.resumes.filter(Boolean).map((r: unknown) => String(r))
+            : p?.resume
+              ? [String(p.resume)]
+              : [];
+          const uniqueResumes: string[] = Array.from(new Set(resumesFromProfile)).slice(0, 3);
+          setExistingResumes(uniqueResumes);
+          setSelectedResume(uniqueResumes.length ? uniqueResumes[0] : null);
+          setResumeMode(uniqueResumes.length ? "existing" : "upload");
 
           setName(p.contact?.name || "");
           setEmail(p.contact?.email || "");
@@ -85,6 +101,8 @@ const ApplyModal: React.FC<ApplyModalProps> = ({ jobId, onClose, initialContact 
         }
       } catch (err) {
         console.error("No saved profile found for user.");
+      } finally {
+        setIsProfileLoading(false);
       }
     };
 
@@ -92,7 +110,12 @@ const ApplyModal: React.FC<ApplyModalProps> = ({ jobId, onClose, initialContact 
   }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) setResumeFile(e.target.files[0]);
+    if (e.target.files) {
+      setResumeMode("upload");
+      setSelectedResume(null);
+      setResumeFile(e.target.files[0]);
+      toast.success("Resume ready to upload. Submit to save it.");
+    }
   };
 
   const handleExperienceChange = (index: number, field: keyof ExperienceItem, value: string | boolean) => {
@@ -132,12 +155,22 @@ const ApplyModal: React.FC<ApplyModalProps> = ({ jobId, onClose, initialContact 
       return true;
     }
     if (step === 2) {
-      if (!resumeFile && !existingResume) {
+    if (resumeMode === "upload") {
+      if (!resumeFile) {
         toast.error("Please upload a resume.");
         return false;
       }
       return true;
     }
+    if (resumeMode === "existing") {
+      if (!selectedResume) {
+        toast.error("Please select a saved resume or upload a new one.");
+        return false;
+      }
+      return true;
+    }
+    return true;
+  }
 
     if (step === 3) {
       if (!isFresher) {
@@ -186,6 +219,7 @@ const ApplyModal: React.FC<ApplyModalProps> = ({ jobId, onClose, initialContact 
 
   const handleSubmit = async () => {
     if (!validateStep(3)) return;
+    setIsSubmitting(true);
 
     const contact = { name, email, phone, altPhone };
     const experienceData = {
@@ -196,8 +230,11 @@ const ApplyModal: React.FC<ApplyModalProps> = ({ jobId, onClose, initialContact 
 
     const formData = new FormData();
     // formData.append("resume", resumeFile!);
-    if (resumeFile) {
+    if (resumeMode === "upload" && resumeFile) {
       formData.append("resume", resumeFile);
+    }
+    if (resumeMode === "existing" && selectedResume) {
+      formData.append("selectedResume", selectedResume);
     }
 
     formData.append("coverLetter", coverLetter);
@@ -206,16 +243,20 @@ const ApplyModal: React.FC<ApplyModalProps> = ({ jobId, onClose, initialContact 
     formData.append("education", JSON.stringify(educationHistory));
     formData.append("project", JSON.stringify(projects));
 
-    console.log("-------------------form Data----------------", formData)
-
     try {
       await API.post(`/jobs/${jobId}/apply`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
+      if (resumeFile) {
+        toast.success("Resume uploaded successfully.");
+      }
       toast.success("Application submitted successfully!");
+      onApplied?.(jobId);
       onClose();
     } catch (err: any) {
       toast.error(err.response?.data?.message || "Failed to apply");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -392,9 +433,61 @@ const ApplyModal: React.FC<ApplyModalProps> = ({ jobId, onClose, initialContact 
 
               <div className="space-y-5">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Resume <span className="text-red-500">*</span>
-                  </label>
+                  <div className="flex items-center justify-between">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Resume <span className="text-red-500">*</span>
+                    </label>
+                    {isProfileLoading && (
+                      <span className="text-xs text-gray-500 flex items-center gap-1">
+                        <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                          <circle cx="12" cy="12" r="10" strokeWidth="4" className="opacity-20" />
+                          <path d="M22 12a10 10 0 00-10-10" strokeWidth="4" className="opacity-60" />
+                        </svg>
+                        Loading profile...
+                      </span>
+                    )}
+                  </div>
+
+                  {existingResumes.length > 0 && (
+                    <div className="flex gap-3 mb-4">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 w-full">
+                        {existingResumes.map((resumeUrl, idx) => (
+                          <label
+                            key={resumeUrl}
+                            className={`flex flex-col gap-2 px-4 py-3 border rounded-lg cursor-pointer transition-colors ${resumeMode === "existing" && selectedResume === resumeUrl ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:border-blue-400"}`}
+                            onClick={() => {
+                              setResumeMode("existing");
+                              setSelectedResume(resumeUrl);
+                              setResumeFile(null);
+                            }}
+                          >
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="radio"
+                                className="text-blue-600"
+                                checked={resumeMode === "existing" && selectedResume === resumeUrl}
+                                onChange={() => {
+                                  setResumeMode("existing");
+                                  setSelectedResume(resumeUrl);
+                                  setResumeFile(null);
+                                }}
+                              />
+                              <span className="font-semibold text-gray-800">Resume #{idx + 1}</span>
+                            </div>
+                            <a
+                              href={resumeUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-sm text-blue-600 underline"
+                            >
+                              Preview
+                            </a>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   <div className="relative">
                     <input
                       type="file"
@@ -402,31 +495,16 @@ const ApplyModal: React.FC<ApplyModalProps> = ({ jobId, onClose, initialContact 
                       onChange={handleFileChange}
                       className="hidden"
                       id="resume-upload"
-                      required
                     />
                     <label
                       htmlFor="resume-upload"
-                      className="flex items-center justify-center w-full px-4 py-8 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-all"
+                      onClick={() => setResumeMode("upload")}
+                      className={`flex items-center justify-center w-full px-4 py-8 border-2 border-dashed rounded-xl cursor-pointer transition-all ${resumeMode === "upload" ? "border-blue-500 bg-blue-50" : "border-gray-300 hover:border-blue-500 hover:bg-blue-50"}`}
                     >
                       <div className="text-center">
                         <svg className="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                         </svg>
-
-                        {!resumeFile && existingResume && (
-                          <p className="text-sm text-gray-600 mt-2">
-                            Using your previously uploaded resume.{" "}
-                            <a
-                              href={existingResume}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-600 underline"
-                            >
-                              View Resume
-                            </a>
-                          </p>
-                        )}
-
 
                         {resumeFile ? (
                           <p className="text-sm text-gray-700 font-medium">{resumeFile.name}</p>
@@ -833,7 +911,8 @@ const ApplyModal: React.FC<ApplyModalProps> = ({ jobId, onClose, initialContact 
             <button
               type="button"
               onClick={handleNext}
-              className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-md hover:shadow-xl transform hover:-translate-y-0.5 transition-all font-medium flex items-center gap-2"
+              className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-md hover:shadow-xl transform hover:-translate-y-0.5 transition-all font-medium flex items-center gap-2 disabled:opacity-60"
+              disabled={isSubmitting}
             >
               Next
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -844,12 +923,25 @@ const ApplyModal: React.FC<ApplyModalProps> = ({ jobId, onClose, initialContact 
             <button
               type="button"
               onClick={handleSubmit}
-              className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-md hover:shadow-xl transform hover:-translate-y-0.5 transition-all font-medium flex items-center gap-2"
+              className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-md hover:shadow-xl transform hover:-translate-y-0.5 transition-all font-medium flex items-center gap-2 disabled:opacity-60"
+              disabled={isSubmitting}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              Submit Application
+              {isSubmitting ? (
+                <>
+                  <svg className="w-5 h-5 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <circle cx="12" cy="12" r="10" strokeWidth="4" className="opacity-25" />
+                    <path d="M22 12a10 10 0 00-10-10" strokeWidth="4" className="opacity-75" />
+                  </svg>
+                  Submitting...
+                </>
+              ) : (
+                <>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Submit Application
+                </>
+              )}
             </button>
           )}
         </div>

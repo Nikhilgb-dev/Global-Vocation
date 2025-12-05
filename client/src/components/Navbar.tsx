@@ -5,6 +5,8 @@ import logo from "../assets/logo.jpg";
 import { Bell, User, LogOut, Settings, Briefcase, Users, LayoutDashboard, Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
+const supportEmail = "Plabonic.hq@gmail.com";
+
 export default function Navbar() {
   const [user, setUser] = useState<any>(null);
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -169,6 +171,12 @@ export default function Navbar() {
       : "text-gray-700 hover:text-blue-600 hover:bg-gray-50"
     }`;
 
+  const mobileNavLinkClass = ({ isActive }: { isActive: boolean }) =>
+    `flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-semibold transition-all duration-200 ${isActive
+      ? "bg-blue-600 text-white shadow-sm"
+      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+    }`;
+
   const getDashboardLink = () => {
     if (user?.role === "admin") return { to: "/dashboard", label: "Admin Dashboard" };
     if (user?.role === "company_admin") return { to: "/company/dashboard", label: "Company Dashboard" };
@@ -177,6 +185,12 @@ export default function Navbar() {
   };
 
   const dashboardLink = getDashboardLink();
+
+  const handleGmailCompose = () => {
+    const subject = encodeURIComponent("Support request from Plabonic");
+    const body = encodeURIComponent("Hi team,\n\nI need help with...");
+    window.location.href = `mailto:${supportEmail}?subject=${subject}&body=${body}`;
+  };
 
   return (
     <header className="sticky p-1.5 top-0 z-50 border-b border-gray-200 bg-white/95 backdrop-blur-lg shadow-sm">
@@ -214,8 +228,20 @@ export default function Navbar() {
             </nav>
           </div>
 
+          {/* Mobile centered nav links */}
+          <nav className="flex flex-1 items-center justify-center gap-2 lg:hidden">
+            <NavLink to="/jobs" className={mobileNavLinkClass}>
+              <Briefcase className="w-4 h-4" />
+              <span>Jobs</span>
+            </NavLink>
+            <NavLink to="/freelancers" className={mobileNavLinkClass}>
+              <Users className="w-4 h-4" />
+              <span>Freelancers</span>
+            </NavLink>
+          </nav>
+
           {/* Right Section */}
-          <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+          <div className="flex items-center gap-1 sm:gap-2 flex-1 justify-end">
             {/* Get Help Button - Hidden on mobile */}
             <button
               onClick={() => setShowHelpModal(true)}
@@ -442,7 +468,7 @@ export default function Navbar() {
               </div>
 
               {/* Mobile Nav Links */}
-              <nav className="space-y-1">
+              {/* <nav className="space-y-1">
                 <NavLink
                   to="/jobs"
                   onClick={() => setIsMobileMenuOpen(false)}
@@ -469,7 +495,7 @@ export default function Navbar() {
                   <Users className="w-5 h-5 flex-shrink-0" />
                   <span>Freelancers</span>
                 </NavLink>
-              </nav>
+              </nav> */}
 
               {/* Mobile Actions */}
               <div className="space-y-2 pt-2 border-t border-gray-200">
@@ -526,7 +552,7 @@ export default function Navbar() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+            className="fixed inset-0 z-[1000] bg-black bg-opacity-60 flex items-center justify-center p-4 sm:p-6"
             onClick={() => setShowHelpModal(false)}
           >
             <motion.div
@@ -534,38 +560,31 @@ export default function Navbar() {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-xl shadow-xl p-4 sm:p-6 w-full max-w-md"
+              className="bg-white rounded-xl shadow-xl p-4 sm:p-6 w-full max-w-md max-h-[85vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="space-y-3 sm:space-y-4 lg:mt-80">
-                <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-4">Get Help</h3>
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Name</label>
-                  <input
-                    type="text"
-                    value="Raghav Naidu"
-                    readOnly
-                    className="w-full px-3 py-2 text-xs sm:text-sm border border-gray-300 rounded-lg bg-gray-50 text-gray-700"
-                  />
-                </div>
+              <div className="space-y-3 sm:space-y-4">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-800">Get Help</h3>
+                <p className="text-xs sm:text-sm text-gray-600">
+                  Tap the button below to compose an email in your mail app (Gmail on mobile will open if installed).
+                </p>
                 <div>
                   <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Email</label>
                   <input
                     type="email"
-                    value="Plabonic.hq@gmail.com"
+                    value={supportEmail}
                     readOnly
                     className="w-full px-3 py-2 text-xs sm:text-sm border border-gray-300 rounded-lg bg-gray-50 text-gray-700"
                   />
                 </div>
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Contact Number</label>
-                  <input
-                    type="tel"
-                    value="+91-8310242649"
-                    readOnly
-                    className="w-full px-3 py-2 text-xs sm:text-sm border border-gray-300 rounded-lg bg-gray-50 text-gray-700"
-                  />
-                </div>
+                <a
+                  href={`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(supportEmail)}&su=Support%20request%20from%20Plabonic`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block w-full px-4 py-2 text-xs sm:text-sm text-center bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Open Gmail Web
+                </a>
               </div>
               <div className="mt-4 sm:mt-6 flex justify-end">
                 <button

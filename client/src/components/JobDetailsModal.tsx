@@ -4,9 +4,10 @@ import ReportAbuseModal from "./ReportAbuseModal";
 interface Props {
     job: any;
     onClose: () => void;
+    onApply?: (jobId: string) => void;
 }
 
-const JobDetailsModal: React.FC<Props> = ({ job, onClose }) => {
+const JobDetailsModal: React.FC<Props> = ({ job, onClose, onApply }) => {
     const [showReportModal, setShowReportModal] = useState(false);
 
     if (!job) return null;
@@ -95,7 +96,15 @@ const JobDetailsModal: React.FC<Props> = ({ job, onClose }) => {
                     </div>
 
                     {/* Report Abuse Button */}
-                    <div className="mt-6 pt-6 border-t border-gray-200">
+                    <div className="mt-6 pt-6 border-t border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        {onApply && (
+                            <button
+                                onClick={() => onApply(job._id)}
+                                className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                            >
+                                Apply Now
+                            </button>
+                        )}
                         <button
                             onClick={() => setShowReportModal(true)}
                             className="flex items-center gap-2 px-4 py-2 text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"

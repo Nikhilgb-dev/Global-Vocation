@@ -1,5 +1,6 @@
 
 import { Link } from 'react-router-dom'
+import logo from "../assets/logo.jpg";
 
 const links = [
   { label: 'About', to: '#' },
@@ -17,8 +18,19 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
             <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded bg-brand"></div>
-              <span className="text-xl font-bold">Global<span className="text-brand">Vocation</span></span>
+              <Link to="/" className="flex items-center gap-2 flex-shrink-0 group">
+                <div className="relative mr-8">
+                  <img
+                    src={logo}
+                    alt="Plabonic"
+                    className="h-10 sm:h-12 md:h-14 w-auto object-contain transition-transform duration-200 group-hover:scale-105"
+                  />
+                  <span className="absolute -top-1 -right-6 sm:-right-8 bg-orange-500 text-white text-[10px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded-full">
+                    Beta
+                  </span>
+                </div>
+              </Link>
+              {/* <span className="text-xl font-bold">Plabonic<span className="text-brand">.com</span></span> */}
             </div>
             <p className="mt-3 text-sm text-gray-600">A modern job platform for tech roles. This is a demo clone for educational use.</p>
           </div>
@@ -29,7 +41,7 @@ export default function Footer() {
           </div>
         </div>
         <div className="mt-8 flex items-center justify-between border-t pt-6 text-sm text-gray-500">
-          <p>© {new Date().getFullYear()} GlobalVocation Demo</p>
+          <p>© {new Date().getFullYear()} Plabonic</p>
           <p>Made with ❤️</p>
         </div>
       </div>

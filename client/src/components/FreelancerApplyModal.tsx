@@ -211,7 +211,7 @@ const FreelancerApplyModal: React.FC<FreelancerApplyModalProps> = ({
 
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Resume/CV *
+                Supporting Document *
               </label>
               <input
                 type="file"

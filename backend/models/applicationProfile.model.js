@@ -51,7 +51,8 @@ const applicationProfileSchema = new mongoose.Schema(
       },
     ],
 
-    resume: String,
+    resume: String, // legacy single resume
+    resumes: [String], // up to 3 recent resumes for reuse
     coverLetter: String,
   },
   { timestamps: true }

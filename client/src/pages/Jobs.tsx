@@ -19,6 +19,20 @@ const Jobs = () => {
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportJob, setReportJob] = useState<any>(null);
 
+  const markJobApplied = (jobId: string) => {
+    setJobs((prev) =>
+      prev.map((job) =>
+        job._id === jobId
+          ? {
+              ...job,
+              hasApplied: true,
+              applicantsCount: (job.applicantsCount || 0) + 1,
+            }
+          : job
+      )
+    );
+  };
+
   useEffect(() => {
     setLoading(true);
     API.get("/jobs")
@@ -351,28 +365,6 @@ const Jobs = () => {
                             year: "numeric",
                           })}
                         </span>
-                        <span>
-                          Expires{" "}
-                          {(() => {
-                            if (!job.expiresAt) {
-                              const fallback = new Date(job.createdAt);
-                              fallback.setDate(fallback.getDate() + 30);
-                              return fallback.toLocaleDateString("en-US", {
-                                month: "short",
-                                day: "numeric",
-                                year: "numeric",
-                              });
-                            }
-                            const expDate = new Date(job.expiresAt);
-                            return isNaN(expDate.getTime())
-                              ? "N/A"
-                              : expDate.toLocaleDateString("en-US", {
-                                  month: "short",
-                                  day: "numeric",
-                                  year: "numeric",
-                                });
-                          })()}
-                        </span>
                         {job.applicantsCount !== undefined && (
                           <span>
                             👥 {job.applicantsCount}{" "}
@@ -414,12 +406,20 @@ const Jobs = () => {
 
       {/* Modals */}
       {showModal && selectedJobId && (
-        <ApplyModal jobId={selectedJobId} onClose={() => setShowModal(false)} />
+        <ApplyModal
+          jobId={selectedJobId}
+          onClose={() => setShowModal(false)}
+          onApplied={(jobId: string) => {
+            markJobApplied(jobId);
+            setShowModal(false);
+          }}
+        />
       )}
       {showDetails && selectedJob && (
         <JobDetailsModal
           jobId={selectedJob}
           onClose={() => setShowDetails(false)}
+          hasApplied={!!jobs.find((j) => j._id === selectedJob)?.hasApplied}
           onApply={(jobId: string) => {
             setShowDetails(false);
             handleApply(jobId);

@@ -211,18 +211,6 @@ const Freelancers: React.FC = () => {
                                         )}
                                     </div>
 
-                                    {f.expiryDate && (
-                                        <div className="text-sm text-gray-700 mb-3">
-                                            <span className="font-semibold text-orange-600">Expires:</span>{" "}
-                                            <span className="text-orange-700">
-                                                {new Date(f.expiryDate).toLocaleDateString('en-US', {
-                                                    year: 'numeric',
-                                                    month: 'short',
-                                                    day: 'numeric'
-                                                })}
-                                            </span>
-                                        </div>
-                                    )}
 
 
                                     {f.hasApplied ? (

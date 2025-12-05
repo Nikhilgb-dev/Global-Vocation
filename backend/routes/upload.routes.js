@@ -1,9 +1,7 @@
 import { Router } from "express";
-import multer from "multer";
-import cloudinary from "../clouldinary/cloudinary.js";
+import { upload, cloudinary } from "../utils/cloudinary.util.js";
 
 const router = Router();
-const upload = multer({ storage: multer.memoryStorage() });
 
 // console.log("cloudinary.config()", cloudinary.config());
 
@@ -30,7 +28,7 @@ router.post("/", upload.single("file"), async (req, res) => {
       const stream = cloudinary.uploader.upload_stream(
         {
           folder,
-          resource_type: "auto", // accept any file type
+          resource_type: "auto", // accept any file type (pdf, docx, images, etc.)
           use_filename: true,
           unique_filename: true,
           filename_override: req.file.originalname,

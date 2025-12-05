@@ -4,18 +4,14 @@ import API from "../api/api";
 interface JobDetailsModalProps {
     jobId: string;
     onClose: () => void;
-}
-
-interface JobDetailsModalProps {
-    jobId: string;
-    onClose: () => void;
     onApply: (jobId: string) => void;
+    hasApplied?: boolean;
 }
 
-
-const JobDetailsModal = ({ jobId, onClose }: JobDetailsModalProps) => {
+const JobDetailsModal: React.FC<JobDetailsModalProps> = ({ jobId, onClose, onApply, hasApplied }) => {
     const [job, setJob] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const isApplied = job?.hasApplied ?? hasApplied ?? false;
 
     useEffect(() => {
         setLoading(true);
@@ -34,14 +30,16 @@ const JobDetailsModal = ({ jobId, onClose }: JobDetailsModalProps) => {
             <div className="bg-white w-full max-w-3xl rounded-2xl shadow-2xl relative overflow-hidden animate-fadeIn max-h-[90vh] flex flex-col">
                 {/* Header with Gradient */}
                 <div className="bg-gradient-to-r from-green-600 to-green-700 px-8 py-6 relative">
-                    <button
-                        onClick={onClose}
-                        className="absolute top-4 right-4 text-white hover:bg-white hover:bg-opacity-20 rounded-full p-2 transition-all"
-                    >
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
+                    <div className="absolute top-4 right-4">
+                        <button
+                            onClick={onClose}
+                            className="text-white hover:bg-white hover:bg-opacity-20 rounded-full p-2 transition-all"
+                        >
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
 
                     {!loading && job && (
                         <div>
@@ -285,14 +283,30 @@ const JobDetailsModal = ({ jobId, onClose }: JobDetailsModalProps) => {
                         >
                             Close
                         </button>
-                        {/* <button
-                            className="px-6 py-3 rounded-xl bg-green-600 text-white hover:bg-green-700 shadow-md hover:shadow-xl transform hover:-translate-y-0.5 transition-all font-medium flex items-center gap-2"
+                        <button
+                            onClick={() => onApply(jobId)}
+                            disabled={isApplied}
+                            className={`px-6 py-3 rounded-xl font-medium flex items-center gap-2 shadow-md hover:shadow-xl transform hover:-translate-y-0.5 transition-all ${isApplied
+                                    ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                                    : "bg-green-600 text-white hover:bg-green-700"
+                                }`}
                         >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                            Apply Now
-                        </button> */}
+                            {isApplied ? (
+                                <>
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                    Applied
+                                </>
+                            ) : (
+                                <>
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                    </svg>
+                                    Apply
+                                </>
+                            )}
+                        </button>
                     </div>
                 )}
             </div>

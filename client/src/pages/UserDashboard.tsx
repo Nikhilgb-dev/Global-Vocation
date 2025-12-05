@@ -2,11 +2,12 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import API from "@/api/api";
 import { motion } from "framer-motion";
-import { CheckCircle, XCircle, Trash2, Eye } from "lucide-react";
+import { CheckCircle, XCircle, Trash2, Eye, ExternalLink } from "lucide-react";
 import JobDetailsModal from "@/components/JobDetailsModal";
 import FreelancerApplicationDetailsModal from "@/components/FreelancerApplicationDetailsModal";
 import OfferDetailsModal from "@/components/OfferDetailsModal";
 import FeedbackButton from "@/components/FeedbackButton";
+import ApplyModal from "@/components/ApplyModal";
 
 type AnyObj = Record<string, any>;
 
@@ -198,6 +199,8 @@ const UserDashboard: React.FC = () => {
     const [selectedJob, setSelectedJob] = useState<AnyObj | null>(null);
     const [selectedFreelancerApplication, setSelectedFreelancerApplication] = useState<AnyObj | null>(null);
     const [selectedOffer, setSelectedOffer] = useState<{ application: AnyObj; type: "job" | "freelancer" } | null>(null);
+    const [showApplyModal, setShowApplyModal] = useState(false);
+    const [applyJobId, setApplyJobId] = useState<string | null>(null);
 
     // Fetchers
     const fetchApplications = useCallback(async () => {
@@ -213,8 +216,14 @@ const UserDashboard: React.FC = () => {
     }, []);
 
     const fetchSavedJobs = useCallback(async () => {
-        const res = await API.get("/users/saved-jobs");
-        setSavedJobs(Array.isArray(res.data) ? res.data : []);
+        try {
+            const res = await API.get("/users/saved-jobs");
+            const data = Array.isArray(res.data) ? res.data : res.data?.savedJobs;
+            setSavedJobs(Array.isArray(data) ? data : []);
+        } catch (err) {
+            console.error("Failed to load saved jobs", err);
+            setSavedJobs([]);
+        }
     }, []);
 
     const fetchNotifications = useCallback(async () => {
@@ -225,8 +234,13 @@ const UserDashboard: React.FC = () => {
     useEffect(() => {
         const load = async () => {
             setLoading(true);
-            await Promise.all([fetchApplications(), fetchFreelancerApplications(), fetchSavedJobs(), fetchNotifications()]);
-            setLoading(false);
+            try {
+                await Promise.all([fetchApplications(), fetchFreelancerApplications(), fetchSavedJobs(), fetchNotifications()]);
+            } catch (err) {
+                console.error("Failed to load dashboard data", err);
+            } finally {
+                setLoading(false);
+            }
         };
         load();
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -262,6 +276,11 @@ const UserDashboard: React.FC = () => {
         if (!window.confirm("Remove this job from saved jobs?")) return;
         await API.delete(`/users/jobs/${jobId}/save`);
         await fetchSavedJobs();
+    };
+    const startApply = (jobId?: string) => {
+        if (!jobId) return;
+        setApplyJobId(jobId);
+        setShowApplyModal(true);
     };
 
     // memoized stats so re-renders don't recompute
@@ -513,6 +532,9 @@ const UserDashboard: React.FC = () => {
                                             <button onClick={() => setSelectedJob(job)} className="text-blue-600 hover:underline text-sm inline-flex items-center">
                                                 <Eye className="w-4 h-4 inline-block mr-1" /> View
                                             </button>
+                                            <button onClick={() => startApply(job._id)} className="text-blue-600 hover:underline text-sm inline-flex items-center">
+                                                <ExternalLink className="w-4 h-4 inline-block mr-1" /> Apply
+                                            </button>
                                             <button onClick={() => unsaveJob(job._id)} className="text-red-600 hover:underline text-sm inline-flex items-center">
                                                 <Trash2 className="w-4 h-4 inline-block mr-1" /> Unsave
                                             </button>
@@ -546,6 +568,13 @@ const UserDashboard: React.FC = () => {
                                             <Eye className="w-4 h-4 inline-block mr-2" /> View
                                         </button>
                                         <button
+                                            onClick={() => startApply(job._id)}
+                                            aria-label="Apply to job"
+                                            className="text-sm px-3 py-2 rounded-md border border-blue-600 text-blue-600 hover:bg-blue-50 transition"
+                                        >
+                                            <ExternalLink className="w-4 h-4 inline-block mr-2" /> Apply
+                                        </button>
+                                        <button
                                             onClick={() => unsaveJob(job._id)}
                                             aria-label="Unsave job"
                                             className="text-sm px-3 py-2 rounded-md border border-red-600 text-red-600 hover:bg-red-50 transition"
@@ -560,7 +589,13 @@ const UserDashboard: React.FC = () => {
                 </div>
             </section>
 
-            {selectedJob && <JobDetailsModal job={selectedJob} onClose={() => setSelectedJob(null)} />}
+            {selectedJob && (
+                <JobDetailsModal
+                    job={selectedJob}
+                    onClose={() => setSelectedJob(null)}
+                    onApply={(jobId) => startApply(jobId)}
+                />
+            )}
 
             {selectedFreelancerApplication && (
                 <FreelancerApplicationDetailsModal application={selectedFreelancerApplication} onClose={() => setSelectedFreelancerApplication(null)} />
@@ -585,6 +620,21 @@ const UserDashboard: React.FC = () => {
                         } else {
                             respondToFreelancerOffer(selectedOffer.application._id, "reject");
                         }
+                    }}
+                />
+            )}
+
+            {showApplyModal && applyJobId && (
+                <ApplyModal
+                    jobId={applyJobId}
+                    onClose={() => {
+                        setShowApplyModal(false);
+                        setApplyJobId(null);
+                    }}
+                    onApplied={() => {
+                        setShowApplyModal(false);
+                        setApplyJobId(null);
+                        fetchApplications();
                     }}
                 />
             )}

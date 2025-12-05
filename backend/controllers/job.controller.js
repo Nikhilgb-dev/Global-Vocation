@@ -3,14 +3,39 @@ import Application from "../models/application.model.js";
 import { uploadToCloudinary } from "../utils/cloudinary.util.js";
 import ApplicationProfile from "../models/applicationProfile.model.js";
 import AbuseReport from "../models/abuseReport.model.js";
+import jwt from "jsonwebtoken";
+import User from "../models/user.model.js";
+
+// Try to decode the bearer token if present; used for public endpoints that still
+// need user context (e.g., to know if the user already applied).
+const getUserFromRequest = async (req) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) return null;
+
+  const token = authHeader.split(" ")[1];
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id).select("_id role company");
+    return user;
+  } catch (err) {
+    return null;
+  }
+};
 export const applyJob = async (req, res) => {
   try {
     const jobId = req.params.id;
-    const { coverLetter, experience, contact } = req.body;
+    const { coverLetter, experience, contact, selectedResume } = req.body;
 
     const existingProfile = await ApplicationProfile.findOne({
       user: req.user._id,
     });
+
+    const savedResumes = Array.isArray(existingProfile?.resumes)
+      ? existingProfile.resumes.filter(Boolean)
+      : [];
+    if (existingProfile?.resume && !savedResumes.includes(existingProfile.resume)) {
+      savedResumes.unshift(existingProfile.resume);
+    }
 
     // const resumeUrl = req.file
     //   ? await uploadToCloudinary(req.file, "resumes")
@@ -22,8 +47,10 @@ export const applyJob = async (req, res) => {
     let resumeUrl;
     if (req.file) {
       resumeUrl = await uploadToCloudinary(req.file, "resumes");
-    } else if (existingProfile?.resume) {
-      resumeUrl = existingProfile.resume;
+    } else if (selectedResume && savedResumes.includes(selectedResume)) {
+      resumeUrl = selectedResume;
+    } else if (savedResumes.length) {
+      resumeUrl = savedResumes[0];
     } else {
       return res.status(400).json({ message: "Resume file missing" });
     }
@@ -139,6 +166,12 @@ export const applyJob = async (req, res) => {
       }
     }
 
+    let nextResumes = savedResumes;
+    if (req.file && resumeUrl) {
+      const unique = [resumeUrl, ...savedResumes.filter((r) => r !== resumeUrl)];
+      nextResumes = unique.slice(0, 3);
+    }
+
     await ApplicationProfile.findOneAndUpdate(
       { user: req.user._id },
       {
@@ -148,6 +181,7 @@ export const applyJob = async (req, res) => {
         education: educationData,
         projects: projectData,
         resume: resumeUrl,
+        resumes: nextResumes,
         coverLetter,
       },
       { upsert: true, new: true, setDefaultsOnInsert: true }
@@ -258,12 +292,23 @@ export const getJobs = async (req, res) => {
  */
 export const getJobById = async (req, res) => {
   try {
-    const job = await Job.findById(req.params.id).populate(
-      "postedBy",
-      "name email"
-    );
+    const [job, user] = await Promise.all([
+      Job.findById(req.params.id).populate("postedBy", "name email"),
+      getUserFromRequest(req),
+    ]);
+
     if (!job) return res.status(404).json({ message: "Job not found" });
-    res.json(job);
+
+    let hasApplied = false;
+    if (user) {
+      const existing = await Application.findOne({
+        job: job._id,
+        user: user._id,
+      }).select("_id");
+      hasApplied = !!existing;
+    }
+
+    res.json({ ...job.toObject(), hasApplied });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
